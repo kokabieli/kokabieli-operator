@@ -1,0 +1,27 @@
+# permissions for end users to view dataprocesses.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: dataprocess-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kokabieli-operator
+    app.kubernetes.io/part-of: kokabieli-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: dataprocess-viewer-role
+rules:
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - dataprocesses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - dataprocesses/status
+  verbs:
+  - get

@@ -1,0 +1,12 @@
+apiVersion: kokabie.li.kokabie.li/v1alpha1
+kind: DataProcess
+metadata:
+  labels:
+    app.kubernetes.io/name: dataprocess
+    app.kubernetes.io/instance: dataprocess-sample
+    app.kubernetes.io/part-of: kokabieli-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-operator
+  name: dataprocess-sample
+spec:
+  # TODO(user): Add fields here

@@ -1,0 +1,57 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: kokabieli-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: DataInterface is the Schema for the datainterfaces API
+      displayName: Data Interface
+      kind: DataInterface
+      name: datainterfaces.kokabie.li.kokabie.li
+      version: v1alpha1
+    - description: DataProcess is the Schema for the dataprocesses API
+      displayName: Data Process
+      kind: DataProcess
+      name: dataprocesses.kokabie.li.kokabie.li
+      version: v1alpha1
+  description: allows to automatically build a constellation of your dataprocessing
+  displayName: kokabieli
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - data
+  - processing
+  - kokabieli
+  - constellation
+  - flow
+  links:
+  - name: Kokabieli Operator
+    url: https://kokabieli-operator.domain
+  maintainers:
+  - email: f@schr.ag
+    name: Florian Schrag
+  maturity: alpha
+  provider:
+    name: kokabieli
+    url: github.com/kokabieli
+  version: 0.0.0
