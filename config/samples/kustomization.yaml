@@ -2,4 +2,5 @@
 resources:
 - kokabie.li_v1alpha1_datainterface.yaml
 - kokabie.li_v1alpha1_dataprocess.yaml
+- kokabie.li_v1alpha1_constellation.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

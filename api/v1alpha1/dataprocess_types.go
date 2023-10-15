@@ -23,6 +23,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// Edge is a data interface that is used as input or output for a data process
 type Edge struct {
 	// References the data interface
 	Reference string `json:"reference,omitempty"`
@@ -32,6 +33,9 @@ type Edge struct {
 	// Outgoing edges to kafka topics usually have this set to true while
 	// incoming edges from kafka topics usually have this set to true.
 	Trigger bool `json:"trigger,omitempty"`
+	// Description is a human-readable description of the data interface
+	// +optional
+	Description *string `json:"description,omitempty"`
 }
 
 // DataProcessSpec defines the desired state of DataProcess
@@ -39,7 +43,7 @@ type DataProcessSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Name is the name of the data process
+	// Name is the displayed name of the data process
 	Name string `json:"name,omitempty"`
 
 	// Type is the type of the data process (e.g. "spring-cloud-stream", "kafka-streams", "spark-streaming")

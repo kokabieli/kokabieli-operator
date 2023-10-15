@@ -29,4 +29,13 @@ resources:
   kind: DataProcess
   path: github.com/kokabieli/kokabieli-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kokabie.li
+  group: kokabie.li
+  kind: Constellation
+  path: github.com/kokabieli/kokabieli-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

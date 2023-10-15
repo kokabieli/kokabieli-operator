@@ -43,7 +43,13 @@ spec:
                 description: Inputs is a list of data interfaces that are used as
                   input for the data process
                 items:
+                  description: Edge is a data interface that is used as input or output
+                    for a data process
                   properties:
+                    description:
+                      description: Description is a human-readable description of
+                        the data interface
+                      type: string
                     info:
                       description: Info is a human-readable description of the data
                         interface
@@ -60,13 +66,19 @@ spec:
                   type: object
                 type: array
               name:
-                description: Name is the name of the data process
+                description: Name is the displayed name of the data process
                 type: string
               outputs:
                 description: Outputs is a list of data interfaces that are used as
                   output for the data process
                 items:
+                  description: Edge is a data interface that is used as input or output
+                    for a data process
                   properties:
+                    description:
+                      description: Description is a human-readable description of
+                        the data interface
+                      type: string
                     info:
                       description: Info is a human-readable description of the data
                         interface

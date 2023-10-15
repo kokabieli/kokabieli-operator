@@ -28,9 +28,9 @@ type DataInterfaceSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Name is the name of the data interface
+	// Name is the displayed name of the data interface
 	Name string `json:"name,omitempty"`
-	// Reference is a clusterwide unique identifier for the data interface
+	// Reference is a cluster-wide unique identifier for the data interface
 	// if empty, the name will be used as reference instead
 	// +optional
 	Reference *string `json:"reference,omitempty"`

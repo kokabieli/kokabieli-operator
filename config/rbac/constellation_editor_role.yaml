@@ -1,0 +1,31 @@
+# permissions for end users to edit constellations.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: constellation-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kokabieli-operator
+    app.kubernetes.io/part-of: kokabieli-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: constellation-editor-role
+rules:
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - constellations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - constellations/status
+  verbs:
+  - get

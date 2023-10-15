@@ -1,0 +1,12 @@
+apiVersion: kokabie.li.kokabie.li/v1alpha1
+kind: Constellation
+metadata:
+  labels:
+    app.kubernetes.io/name: constellation
+    app.kubernetes.io/instance: constellation-sample
+    app.kubernetes.io/part-of: kokabieli-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-operator
+  name: constellation-sample
+spec:
+  # TODO(user): Add fields here

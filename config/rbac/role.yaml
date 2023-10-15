@@ -8,6 +8,32 @@ rules:
 - apiGroups:
   - kokabie.li.kokabie.li
   resources:
+  - constellations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - constellations/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - constellations/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
   - datainterfaces
   verbs:
   - create

@@ -40,10 +40,10 @@ spec:
                   interface
                 type: string
               name:
-                description: Name is the name of the data interface
+                description: Name is the displayed name of the data interface
                 type: string
               reference:
-                description: Reference is a clusterwide unique identifier for the
+                description: Reference is a cluster-wide unique identifier for the
                   data interface if empty, the name will be used as reference instead
                 type: string
               type:
