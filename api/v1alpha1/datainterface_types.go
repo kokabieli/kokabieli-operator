@@ -44,9 +44,15 @@ type DataInterfaceSpec struct {
 // DataInterfaceStatus defines the observed state of DataInterface
 type DataInterfaceStatus struct {
 	// UsedReferences is the generated name of the data interface
+	// +operator-sdk:csv:customresourcedefinitions:type=status
 	UsedReference string `json:"usedReference,omitempty"`
 	// UsedInDataProcesses is a list of data processes that use this data interface
-	UsedInDataProcesses []metav1.OwnerReference `json:"usedInDataProcesses,omitempty"`
+	// +operator-sdk:csv:customresourcedefinitions:type=status
+	UsedInDataProcesses []NamespacedName `json:"usedInDataProcesses,omitempty"`
+
+	// Conditions store the status conditions of the data interface
+	// +operator-sdk:csv:customresourcedefinitions:type=status
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 //+kubebuilder:object:root=true

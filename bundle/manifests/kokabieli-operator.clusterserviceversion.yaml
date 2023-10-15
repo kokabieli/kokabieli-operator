@@ -6,6 +6,21 @@ metadata:
       [
         {
           "apiVersion": "kokabie.li.kokabie.li/v1alpha1",
+          "kind": "Constellation",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "kokabieli-operator",
+              "app.kubernetes.io/instance": "constellation-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "constellation",
+              "app.kubernetes.io/part-of": "kokabieli-operator"
+            },
+            "name": "constellation-sample"
+          },
+          "spec": null
+        },
+        {
+          "apiVersion": "kokabie.li.kokabie.li/v1alpha1",
           "kind": "DataInterface",
           "metadata": {
             "labels": {
@@ -17,7 +32,11 @@ metadata:
             },
             "name": "datainterface-sample"
           },
-          "spec": null
+          "spec": {
+            "description": "This is a sample DataInterface",
+            "name": "datainterface-sample",
+            "type": "datainterface"
+          }
         },
         {
           "apiVersion": "kokabie.li.kokabie.li/v1alpha1",
@@ -32,11 +51,29 @@ metadata:
             },
             "name": "dataprocess-sample"
           },
-          "spec": null
+          "spec": {
+            "description": "This is a sample DataProcess",
+            "inputs": [
+              {
+                "description": "This is a sample input",
+                "source": "datainterface-sample",
+                "trigger": true
+              }
+            ],
+            "name": "dataprocess-sample",
+            "outputs": [
+              {
+                "description": "This is a sample output",
+                "target": "datainterface-sample",
+                "trigger": true
+              }
+            ],
+            "type": "dataprocess"
+          }
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-10-15T13:15:50Z"
+    createdAt: "2023-10-15T23:23:11Z"
     operators.operatorframework.io/builder: operator-sdk-unknown
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: kokabieli-operator.v0.0.1
@@ -45,15 +82,49 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: Constellation is the Schema for the constellations API
+      displayName: Constellation
+      kind: Constellation
+      name: constellations.kokabie.li.kokabie.li
+      statusDescriptors:
+      - description: Conditions store the status conditions of the constellation
+        displayName: Conditions
+        path: conditions
+      - description: ConstellationResult is the result of the constellation
+        displayName: Constellation Result
+        path: constellationResult
+      version: v1alpha1
     - description: DataInterface is the Schema for the datainterfaces API
       displayName: Data Interface
       kind: DataInterface
       name: datainterfaces.kokabie.li.kokabie.li
+      statusDescriptors:
+      - description: Conditions store the status conditions of the data interface
+        displayName: Conditions
+        path: conditions
+      - description: UsedInDataProcesses is a list of data processes that use this
+          data interface
+        displayName: Used In Data Processes
+        path: usedInDataProcesses
+      - description: UsedReferences is the generated name of the data interface
+        displayName: Used Reference
+        path: usedReference
       version: v1alpha1
     - description: DataProcess is the Schema for the dataprocesses API
       displayName: Data Process
       kind: DataProcess
       name: dataprocesses.kokabie.li.kokabie.li
+      statusDescriptors:
+      - description: Conditions store the status conditions of the data process
+        displayName: Conditions
+        path: conditions
+      - description: Loaded is true if the data process is loaded into the system
+        displayName: Loaded
+        path: loaded
+      - description: 'Important: Run "make" to regenerate code after modifying this
+          file'
+        displayName: Missing Data Interfaces
+        path: missingDataInterfaces
       version: v1alpha1
   description: allows to automatically build a constellation of your dataprocessing
   displayName: kokabieli
@@ -64,6 +135,32 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - kokabie.li.kokabie.li
+          resources:
+          - constellations
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - kokabie.li.kokabie.li
+          resources:
+          - constellations/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - kokabie.li.kokabie.li
+          resources:
+          - constellations/status
+          verbs:
+          - get
+          - patch
+          - update
         - apiGroups:
           - kokabie.li.kokabie.li
           resources:

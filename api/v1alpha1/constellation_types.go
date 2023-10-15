@@ -25,7 +25,7 @@ import (
 
 type Filter struct {
 	// Namespace to filter for, if empty all namespaces are used
-	Namespaces []string `json:"namespace,omitempty"`
+	Namespaces []string `json:"namespaces,omitempty"`
 	// Labels to filter for, if empty all labels are used
 	Labels map[string]string `json:"labels,omitempty"`
 }
@@ -49,6 +49,8 @@ type ConstellationInterface struct {
 	Description string `json:"description,omitempty"`
 	// Labels is a set of labels for the data interface
 	Labels map[string]string `json:"labels,omitempty"`
+	// Source is the namespaced name of the data interface
+	Source NamespacedName `json:"source,omitempty"`
 }
 
 type ConstellationEdge struct {
@@ -77,11 +79,72 @@ type ConstellationDataProcess struct {
 	Outputs []ConstellationEdge `json:"outputs,omitempty"`
 	// Labels is a set of labels for the data interface
 	Labels map[string]string `json:"labels,omitempty"`
+	// Source is the namespaced name of the data process
+	Source NamespacedName `json:"source,omitempty"`
 }
 
 type ConstellationResult struct {
-	DataInterfaceList []ConstellationInterface `json:"dataInterfaceList,omitempty"`
-	DataProcessList   []DataProcess            `json:"dataProcessList,omitempty"`
+	DataInterfaceList []ConstellationInterface   `json:"dataInterfaceList"`
+	DataProcessList   []ConstellationDataProcess `json:"dataProcessList"`
+}
+
+func (in *ConstellationResult) AddDataInterfaceList(items []DataInterface) {
+	for _, item := range items {
+		in.DataInterfaceList = append(in.DataInterfaceList, ConstellationInterface{
+			Name:        item.Spec.Name,
+			Reference:   item.Status.UsedReference,
+			Type:        item.Spec.Type,
+			Description: asString(item.Spec.Description),
+			Labels:      item.Labels,
+			Source: NamespacedName{
+				Namespace: item.Namespace,
+				Name:      item.Name,
+			},
+		})
+	}
+}
+
+func (in *ConstellationResult) AddDataProcessList(items []DataProcess) {
+	for _, item := range items {
+		var inputs []ConstellationEdge
+		for _, input := range item.Spec.Inputs {
+			inputs = append(inputs, ConstellationEdge{
+				Reference:   input.Reference,
+				Info:        input.Info,
+				Trigger:     input.Trigger,
+				Description: asString(input.Description),
+			})
+		}
+		var outputs []ConstellationEdge
+		for _, output := range item.Spec.Outputs {
+			outputs = append(outputs, ConstellationEdge{
+				Reference:   output.Reference,
+				Info:        output.Info,
+				Trigger:     output.Trigger,
+				Description: asString(output.Description),
+			})
+		}
+
+		in.DataProcessList = append(in.DataProcessList, ConstellationDataProcess{
+			Name:        item.Spec.Name,
+			Type:        item.Spec.Type,
+			Description: item.Spec.Description,
+			Inputs:      inputs,
+			Outputs:     outputs,
+			Labels:      item.Labels,
+			Source: NamespacedName{
+				Namespace: item.Namespace,
+				Name:      item.Name,
+			},
+		})
+	}
+}
+
+func asString(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
 }
 
 // ConstellationStatus defines the observed state of Constellation
@@ -90,7 +153,12 @@ type ConstellationStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// ConstellationResult is the result of the constellation
-	ConstellationResult ConstellationResult `json:"constellationResult,omitempty"`
+	// +operator-sdk:csv:customresourcedefinitions:type=status
+	ConstellationResult *ConstellationResult `json:"constellationResult,omitempty"`
+
+	// Conditions store the status conditions of the constellation
+	// +operator-sdk:csv:customresourcedefinitions:type=status
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 //+kubebuilder:object:root=true

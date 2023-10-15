@@ -9,4 +9,14 @@ metadata:
     app.kubernetes.io/created-by: kokabieli-operator
   name: dataprocess-sample
 spec:
-  # TODO(user): Add fields here
+    name: dataprocess-sample
+    type: dataprocess
+    description: "This is a sample DataProcess"
+    inputs:
+        - source: "datainterface-sample"
+          trigger: true
+          description: "This is a sample input"
+    outputs:
+        - target: "datainterface-sample"
+          description: "This is a sample output"
+          trigger: true

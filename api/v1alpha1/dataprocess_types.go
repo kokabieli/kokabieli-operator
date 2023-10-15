@@ -59,10 +59,16 @@ type DataProcessSpec struct {
 // DataProcessStatus defines the observed state of DataProcess
 type DataProcessStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
+	// +operator-sdk:csv:customresourcedefinitions:type=status
 	MissingDataInterfaces []string `json:"missingDataInterfaces,omitempty"`
 
 	// Loaded is true if the data process is loaded into the system
+	// +operator-sdk:csv:customresourcedefinitions:type=status
 	Loaded bool `json:"loaded,omitempty"`
+
+	// Conditions store the status conditions of the data process
+	// +operator-sdk:csv:customresourcedefinitions:type=status
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 //+kubebuilder:object:root=true

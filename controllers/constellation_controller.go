@@ -18,13 +18,16 @@ package controllers
 
 import (
 	"context"
-
+	kokabieliv1alpha1 "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	kokabieliv1alpha1 "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // ConstellationReconciler reconciles a Constellation object
@@ -47,16 +50,121 @@ type ConstellationReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	log.Info("Reconciling Constellation", "constellation", req.NamespacedName)
+	constellation := &kokabieliv1alpha1.Constellation{}
+	err := r.Get(ctx, req.NamespacedName, constellation)
 
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("Constellation not found, ignoring since object must be deleted")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed to get Constellation")
+		return ctrl.Result{}, err
+	}
+
+	constellationResult := &kokabieliv1alpha1.ConstellationResult{
+		DataInterfaceList: []kokabieliv1alpha1.ConstellationInterface{},
+		DataProcessList:   []kokabieliv1alpha1.ConstellationDataProcess{},
+	}
+
+	if constellation.Spec.Filters == nil || len(constellation.Spec.Filters) == 0 {
+		log.Info("No filters defined, using all data interfaces and data processes")
+		var opts []client.ListOption
+		err = r.fetch(ctx, constellationResult, opts)
+		if err != nil {
+			log.Error(err, "Failed to fetch data interfaces and data processes")
+			return ctrl.Result{}, err
+		}
+	} else {
+		for _, filter := range constellation.Spec.Filters {
+			log.Info("Filter", "filter", filter)
+
+			var opts []client.ListOption
+			if filter.Labels != nil && len(filter.Labels) > 0 {
+				opts = append(opts, client.MatchingLabels(filter.Labels))
+			}
+
+			if filter.Namespaces != nil && len(filter.Namespaces) > 0 {
+				for _, namespace := range filter.Namespaces {
+					newOpts := append(opts, client.InNamespace(namespace))
+					err = r.fetch(ctx, constellationResult, newOpts)
+					if err != nil {
+						log.Error(err, "Failed to fetch data interfaces and data processes")
+						return ctrl.Result{}, err
+					}
+				}
+			} else {
+				err = r.fetch(ctx, constellationResult, opts)
+				if err != nil {
+					log.Error(err, "Failed to fetch data interfaces and data processes")
+					return ctrl.Result{}, err
+				}
+			}
+		}
+	}
+
+	err = r.Get(ctx, req.NamespacedName, constellation)
+	if err != nil {
+		log.Error(err, "Failed to re-fetch Constellation")
+		return ctrl.Result{}, err
+	}
+	constellation.Status.ConstellationResult = constellationResult
+
+	if err := r.Status().Update(ctx, constellation); err != nil {
+		log.Error(err, "Failed to update Constellation status")
+		return ctrl.Result{}, err
+	}
+
+	log.Info("Reconciled Constellation", "constellation", constellation.Status.ConstellationResult)
 	return ctrl.Result{}, nil
+}
+
+func (r *ConstellationReconciler) fetch(ctx context.Context, constellationResult *kokabieliv1alpha1.ConstellationResult, filterOpts []client.ListOption) error {
+	log := log.FromContext(ctx)
+
+	dataInterfaceList := &kokabieliv1alpha1.DataInterfaceList{}
+	dataProcessList := &kokabieliv1alpha1.DataProcessList{}
+	err := r.List(ctx, dataInterfaceList, filterOpts...)
+	if err != nil {
+		log.Error(err, "Failed to list DataInterfaces")
+		return err
+	}
+	err = r.List(ctx, dataProcessList, filterOpts...)
+	if err != nil {
+		log.Error(err, "Failed to list DataProcesses")
+		return err
+	}
+	constellationResult.AddDataInterfaceList(dataInterfaceList.Items)
+	constellationResult.AddDataProcessList(dataProcessList.Items)
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ConstellationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&kokabieliv1alpha1.Constellation{}).
+		Watches(&source.Kind{Type: &kokabieliv1alpha1.DataInterface{}}, handler.EnqueueRequestsFromMapFunc(r.requeueAllConstellations)).
+		Watches(&source.Kind{Type: &kokabieliv1alpha1.DataProcess{}}, handler.EnqueueRequestsFromMapFunc(r.requeueAllConstellations)).
 		Complete(r)
+}
+
+func (r *ConstellationReconciler) requeueAllConstellations(_ client.Object) []reconcile.Request {
+	var ret []reconcile.Request
+	list := &kokabieliv1alpha1.ConstellationList{}
+	err := r.List(context.Background(), list)
+	if err != nil {
+		return nil
+	}
+	for _, item := range list.Items {
+		ret = append(ret, reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      item.Name,
+				Namespace: item.Namespace,
+			},
+		})
+	}
+	return ret
 }
