@@ -69,18 +69,25 @@ type ConstellationEdge struct {
 
 type ConstellationDataProcess struct {
 	// Name is the displayed name of the data process
+	//+operator-sdk:csv:customresourcedefinitions:type=spec
 	Name string `json:"name,omitempty"`
 	// Type is the type of the data process (e.g. "spring-cloud-stream", "kafka-streams", "spark-streaming")
+	//+operator-sdk:csv:customresourcedefinitions:type=spec
 	Type string `json:"type,omitempty"`
 	// Description is a human-readable description of the data process
+	//+operator-sdk:csv:customresourcedefinitions:type=spec
 	Description string `json:"description,omitempty"`
 	// Inputs is a list of data interfaces that are used as input for the data process
+	//+operator-sdk:csv:customresourcedefinitions:type=spec
 	Inputs []ConstellationEdge `json:"inputs,omitempty"`
 	// Outputs is a list of data interfaces that are used as output for the data process
+	//+operator-sdk:csv:customresourcedefinitions:type=spec
 	Outputs []ConstellationEdge `json:"outputs,omitempty"`
 	// Labels is a set of labels for the data interface
+	//+operator-sdk:csv:customresourcedefinitions:type=spec
 	Labels map[string]string `json:"labels,omitempty"`
 	// Source is the namespaced name of the data process
+	//+operator-sdk:csv:customresourcedefinitions:type=spec
 	Source NamespacedName `json:"source,omitempty"`
 }
 
@@ -160,7 +167,7 @@ func (in *ConstellationResult) GenerateMissingInterfaces() {
 	}
 }
 
-func (in *ConstellationResult) AddDataProcessList(log logr.Logger, items []DataProcess) {
+func (in *ConstellationResult) AddDataProcessList(_ logr.Logger, items []DataProcess) {
 	for _, item := range items {
 		var inputs []ConstellationEdge
 		for _, input := range item.Spec.Inputs {
