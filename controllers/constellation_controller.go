@@ -71,7 +71,6 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	if constellation.Spec.Filters == nil || len(constellation.Spec.Filters) == 0 {
-		log.Info("No filters defined, using all data interfaces and data processes")
 		var opts []client.ListOption
 		err = r.fetch(ctx, constellationResult, opts)
 		if err != nil {
@@ -118,7 +117,6 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	log.Info("Reconciled Constellation", "constellation", constellation.Status.ConstellationResult)
 	return ctrl.Result{}, nil
 }
 

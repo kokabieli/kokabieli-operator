@@ -18,6 +18,11 @@ package controllers
 
 import (
 	"context"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sort"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -51,7 +56,172 @@ func (r *DataInterfaceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	log.Info("Reconciling DataInterface", "datainterface", req.NamespacedName)
 
+	dataInterface := &kokabieliv1alpha1.DataInterface{}
+	err := r.Get(ctx, req.NamespacedName, dataInterface)
+
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("Interface not found, ignoring since object must be deleted")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed to get Interface")
+		return ctrl.Result{}, err
+	}
+
+	ref := dataInterfaceReference(dataInterface)
+	if dataInterface.Status.UsedReference != ref {
+		dataInterface.Status.UsedReference = ref
+		err = r.Status().Update(ctx, dataInterface)
+		if err != nil {
+			log.Error(err, "Failed to update Interface status")
+			return ctrl.Result{}, err
+		}
+	}
+
+	usedInDataProcesses, err := getProccessesForInterface(ctx, r.Client, ref)
+	if err != nil {
+		log.Error(err, "Failed to get processes for Interface")
+		return ctrl.Result{}, err
+	}
+
+	if !equalNamespacedNames(dataInterface.Status.UsedInDataProcesses, usedInDataProcesses) {
+		err = r.Get(ctx, req.NamespacedName, dataInterface)
+		if err != nil {
+			log.Error(err, "Failed to refetch Interface")
+			return ctrl.Result{}, err
+		}
+		if !equalNamespacedNames(dataInterface.Status.UsedInDataProcesses, usedInDataProcesses) {
+			dataInterface.Status.UsedInDataProcesses = usedInDataProcesses
+			err = r.Status().Update(ctx, dataInterface)
+			if err != nil {
+				log.Error(err, "Failed to update Interface status")
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	err = r.checkForDuplicates(ctx, dataInterface)
+	if err != nil {
+		log.Error(err, "Failed to check for duplicates")
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *kokabieliv1alpha1.DataInterface) error {
+	log := log.FromContext(ctx)
+	allInterfaces := &kokabieliv1alpha1.DataInterfaceList{}
+	err := r.List(ctx, allInterfaces)
+	if err != nil {
+		log.Error(err, "Failed to list all interfaces")
+		return err
+	}
+	// Check for duplicate references
+	for _, dataInterface := range allInterfaces.Items {
+		if di.Status.UsedReference == dataInterface.Status.UsedReference && (dataInterface.Namespace != di.Namespace || dataInterface.Name != di.Name) {
+
+			err = r.Get(ctx, types.NamespacedName{Namespace: di.Namespace, Name: di.Name}, di)
+			if err != nil {
+				log.Error(err, "Failed to refetch Interface")
+				return err
+			}
+
+			condition := metav1.Condition{
+				Type:    "UniqueReference",
+				Status:  metav1.ConditionFalse,
+				Reason:  "failed_duplicate_check",
+				Message: "DuplicateReference for object: " + dataInterface.Namespace + "/" + dataInterface.Name,
+			}
+			if !meta.IsStatusConditionFalse(di.Status.Conditions, condition.Type) {
+				log.Error(err, "Duplicate reference",
+					"reference", di.Status.UsedReference,
+					"object", dataInterface.Namespace+"/"+dataInterface.Name)
+				meta.SetStatusCondition(&di.Status.Conditions, condition)
+				err = r.Status().Update(ctx, di)
+				if err != nil {
+					log.Error(err, "Failed to update Interface status")
+					return err
+				}
+			}
+			return nil
+		}
+	}
+
+	condition := metav1.Condition{
+		Type:    "UniqueReference",
+		Status:  metav1.ConditionTrue,
+		Reason:  "successful_duplicate_check",
+		Message: "UniqueReference " + di.Status.UsedReference + " is unique",
+	}
+	if !meta.IsStatusConditionTrue(di.Status.Conditions, condition.Type) {
+		if !meta.IsStatusConditionTrue(di.Status.Conditions, condition.Type) {
+
+			err = r.Get(ctx, types.NamespacedName{Namespace: di.Namespace, Name: di.Name}, di)
+			if err != nil {
+				log.Error(err, "Failed to refetch Interface")
+				return err
+			}
+
+			meta.SetStatusCondition(&di.Status.Conditions, condition)
+			err = r.Status().Update(ctx, di)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	return nil
+}
+
+func getProccessesForInterface(ctx context.Context, c client.Client, ref string) ([]kokabieliv1alpha1.NamespacedName, error) {
+
+	dataProcesses := &kokabieliv1alpha1.DataProcessList{}
+	err := c.List(ctx, dataProcesses)
+	if err != nil {
+		return nil, err
+	}
+	var usedInDataProcesses []kokabieliv1alpha1.NamespacedName
+	for _, dataProcess := range dataProcesses.Items {
+		refName := kokabieliv1alpha1.NamespacedName{Namespace: dataProcess.Namespace, Name: dataProcess.Name}
+		for _, input := range dataProcess.Spec.Inputs {
+			if input.Reference == ref {
+				usedInDataProcesses = append(usedInDataProcesses, refName)
+			}
+		}
+		for _, output := range dataProcess.Spec.Outputs {
+			if output.Reference == ref {
+				usedInDataProcesses = append(usedInDataProcesses, refName)
+			}
+		}
+	}
+	sort.Slice(usedInDataProcesses, func(i, j int) bool {
+		if usedInDataProcesses[i].Namespace != usedInDataProcesses[j].Namespace {
+			return usedInDataProcesses[i].Namespace < usedInDataProcesses[j].Namespace
+		}
+		return usedInDataProcesses[i].Name < usedInDataProcesses[j].Name
+	})
+	return usedInDataProcesses, nil
+}
+
+func equalNamespacedNames(processes []kokabieliv1alpha1.NamespacedName, processes2 []kokabieliv1alpha1.NamespacedName) bool {
+	if len(processes) != len(processes2) {
+		return false
+	}
+	for i, process := range processes {
+		if process != processes2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func dataInterfaceReference(dataInterface *kokabieliv1alpha1.DataInterface) string {
+	if dataInterface.Spec.Reference != nil {
+		return *dataInterface.Spec.Reference
+	}
+	return dataInterface.Name
 }
 
 // SetupWithManager sets up the controller with the Manager.

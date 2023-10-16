@@ -13,10 +13,10 @@ spec:
     type: dataprocess
     description: "This is a sample DataProcess"
     inputs:
-        - source: "datainterface-sample"
+        - reference: "datainterface-sample"
           trigger: true
           description: "This is a sample input"
     outputs:
-        - target: "datainterface-sample"
+        - reference: "datainterface-sample"
           description: "This is a sample output"
           trigger: true

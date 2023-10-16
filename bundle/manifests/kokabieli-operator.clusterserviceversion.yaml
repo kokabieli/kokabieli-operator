@@ -56,7 +56,7 @@ metadata:
             "inputs": [
               {
                 "description": "This is a sample input",
-                "source": "datainterface-sample",
+                "reference": "datainterface-sample",
                 "trigger": true
               }
             ],
@@ -64,7 +64,7 @@ metadata:
             "outputs": [
               {
                 "description": "This is a sample output",
-                "target": "datainterface-sample",
+                "reference": "datainterface-sample",
                 "trigger": true
               }
             ],
@@ -73,7 +73,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-10-15T23:23:11Z"
+    createdAt: "2023-10-16T01:03:22Z"
     operators.operatorframework.io/builder: operator-sdk-unknown
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: kokabieli-operator.v0.0.1

@@ -89,18 +89,69 @@ type ConstellationResult struct {
 }
 
 func (in *ConstellationResult) AddDataInterfaceList(items []DataInterface) {
+	existing := make(map[string]bool)
+	for _, item := range in.DataInterfaceList {
+		existing[item.Reference] = true
+	}
 	for _, item := range items {
-		in.DataInterfaceList = append(in.DataInterfaceList, ConstellationInterface{
-			Name:        item.Spec.Name,
-			Reference:   item.Status.UsedReference,
-			Type:        item.Spec.Type,
-			Description: asString(item.Spec.Description),
-			Labels:      item.Labels,
-			Source: NamespacedName{
-				Namespace: item.Namespace,
-				Name:      item.Name,
-			},
-		})
+		if !existing[item.Status.UsedReference] {
+			newItem := ConstellationInterface{
+				Name:        item.Spec.Name,
+				Reference:   item.Status.UsedReference,
+				Type:        item.Spec.Type,
+				Description: asString(item.Spec.Description),
+				Labels:      item.Labels,
+				Source: NamespacedName{
+					Namespace: item.Namespace,
+					Name:      item.Name,
+				},
+			}
+			in.DataInterfaceList = append(in.DataInterfaceList, newItem)
+			existing[newItem.Reference] = true
+		}
+	}
+}
+
+func (in *ConstellationResult) GenerateMissingInterfaces() {
+	existing := make(map[string]bool)
+	for _, item := range in.DataInterfaceList {
+		existing[item.Reference] = true
+	}
+	for _, item := range in.DataProcessList {
+		for _, input := range item.Inputs {
+			if !existing[input.Reference] {
+				newItem := ConstellationInterface{
+					Name:        input.Reference,
+					Reference:   input.Reference,
+					Type:        "missing",
+					Description: "missing",
+					Labels:      nil,
+					Source: NamespacedName{
+						Namespace: item.Source.Namespace,
+						Name:      item.Source.Name,
+					},
+				}
+				in.DataInterfaceList = append(in.DataInterfaceList, newItem)
+				existing[newItem.Reference] = true
+			}
+		}
+		for _, output := range item.Outputs {
+			if !existing[output.Reference] {
+				newItem := ConstellationInterface{
+					Name:        output.Reference,
+					Reference:   output.Reference,
+					Type:        "missing",
+					Description: "missing",
+					Labels:      nil,
+					Source: NamespacedName{
+						Namespace: item.Source.Namespace,
+						Name:      item.Source.Name,
+					},
+				}
+				in.DataInterfaceList = append(in.DataInterfaceList, newItem)
+				existing[newItem.Reference] = true
+			}
+		}
 	}
 }
 
