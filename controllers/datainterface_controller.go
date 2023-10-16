@@ -109,7 +109,7 @@ func (r *DataInterfaceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	return ctrl.Result{}, nil
 }
 
-func (r DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *kokabieliv1alpha1.DataInterface) error {
+func (r *DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *kokabieliv1alpha1.DataInterface) error {
 	log := logr.FromContext(ctx)
 	allInterfaces := &kokabieliv1alpha1.DataInterfaceList{}
 	err := r.List(ctx, allInterfaces)

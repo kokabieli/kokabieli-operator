@@ -138,7 +138,7 @@ func (r *DataProcessReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *DataProcessReconciler) requeAffectedProcessors(object client.Object) []reconcile.Request {
-	ret := []reconcile.Request{}
+	var ret []reconcile.Request
 
 	dataInterface := object.(*kokabieliv1alpha1.DataInterface)
 
