@@ -38,8 +38,5 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21.1'
-      - uses: imranismail/setup-kustomize@v2
-        with:
-          version: "v5.0.0"
       - name: make bundle
         run: make bundle bundle-build
