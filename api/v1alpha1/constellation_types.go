@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -88,7 +89,7 @@ type ConstellationResult struct {
 	DataProcessList   []ConstellationDataProcess `json:"dataProcessList"`
 }
 
-func (in *ConstellationResult) AddDataInterfaceList(items []DataInterface) {
+func (in *ConstellationResult) AddDataInterfaceList(log logr.Logger, items []DataInterface) {
 	existing := make(map[string]bool)
 	for _, item := range in.DataInterfaceList {
 		existing[item.Reference] = true
@@ -105,6 +106,10 @@ func (in *ConstellationResult) AddDataInterfaceList(items []DataInterface) {
 					Namespace: item.Namespace,
 					Name:      item.Name,
 				},
+			}
+			if newItem.Reference == "" {
+				log.Info("Reference is empty - skipping", "item", newItem.Source)
+				continue
 			}
 			in.DataInterfaceList = append(in.DataInterfaceList, newItem)
 			existing[newItem.Reference] = true
@@ -155,7 +160,7 @@ func (in *ConstellationResult) GenerateMissingInterfaces() {
 	}
 }
 
-func (in *ConstellationResult) AddDataProcessList(items []DataProcess) {
+func (in *ConstellationResult) AddDataProcessList(log logr.Logger, items []DataProcess) {
 	for _, item := range items {
 		var inputs []ConstellationEdge
 		for _, input := range item.Spec.Inputs {

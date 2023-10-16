@@ -221,7 +221,7 @@ func dataInterfaceReference(dataInterface *kokabieliv1alpha1.DataInterface) stri
 	if dataInterface.Spec.Reference != nil {
 		return *dataInterface.Spec.Reference
 	}
-	return dataInterface.Name
+	return dataInterface.Namespace + "/" + dataInterface.Name
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -104,6 +104,7 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			}
 		}
 	}
+	constellationResult.GenerateMissingInterfaces()
 
 	err = r.Get(ctx, req.NamespacedName, constellation)
 	if err != nil {
@@ -135,8 +136,8 @@ func (r *ConstellationReconciler) fetch(ctx context.Context, constellationResult
 		log.Error(err, "Failed to list DataProcesses")
 		return err
 	}
-	constellationResult.AddDataInterfaceList(dataInterfaceList.Items)
-	constellationResult.AddDataProcessList(dataProcessList.Items)
+	constellationResult.AddDataInterfaceList(log, dataInterfaceList.Items)
+	constellationResult.AddDataProcessList(log, dataProcessList.Items)
 	return nil
 }
 

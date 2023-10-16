@@ -37,6 +37,28 @@ var _ = Describe("Constellation controller", func() {
 		})
 		return err
 	}
+	reconsileInterface := func(name types.NamespacedName) error {
+		reconsiler := &DataInterfaceReconciler{
+			Client: k8sClient,
+			Scheme: k8sClient.Scheme(),
+		}
+
+		_, err := reconsiler.Reconcile(ctx, reconcile.Request{
+			NamespacedName: name,
+		})
+		return err
+	}
+	reconsileProcess := func(name types.NamespacedName) error {
+		reconsiler := &DataProcessReconciler{
+			Client: k8sClient,
+			Scheme: k8sClient.Scheme(),
+		}
+
+		_, err := reconsiler.Reconcile(ctx, reconcile.Request{
+			NamespacedName: name,
+		})
+		return err
+	}
 
 	createSampleConstellations := func() {
 		constellation := &kokav1alpha1.Constellation{
@@ -245,9 +267,8 @@ var _ = Describe("Constellation controller", func() {
 		createSampleDataProcesses()
 
 		By("Reconciling the custom resource created")
-		err = reconsileConstellation(namespacedFilteredNameTyped)
-		err = reconsileConstellation(allNameTyped)
-		Expect(err).To(Not(HaveOccurred()))
+		Expect(reconsileConstellation(namespacedFilteredNameTyped)).To(Not(HaveOccurred()))
+		Expect(reconsileConstellation(allNameTyped)).To(Not(HaveOccurred()))
 
 		By("Checking the latest Status of the custom resource")
 		Eventually(func() error {
@@ -259,6 +280,37 @@ var _ = Describe("Constellation controller", func() {
 			if constellation.Status.ConstellationResult != nil {
 				Expect(len(constellation.Status.ConstellationResult.DataInterfaceList)).
 					To(Equal(2))
+				Expect(constellation.Status.ConstellationResult.DataInterfaceList[0].Type).
+					To(Equal("missing"))
+				Expect(len(constellation.Status.ConstellationResult.DataProcessList)).
+					To(Equal(1))
+				return nil
+			}
+			fmt.Printf("constellation.Status: %v\n", constellation.Status)
+			return fmt.Errorf("no constellation result found")
+		}, time.Second*10, time.Second).Should(Succeed())
+
+		By("Full reconsiliation of the custom resources created")
+		Expect(reconsileInterface(types.NamespacedName{Name: "test-data-interface-empty", Namespace: Namespace})).To(Not(HaveOccurred()))
+		Expect(reconsileInterface(types.NamespacedName{Name: "test-data-interface-complete", Namespace: Namespace})).To(Not(HaveOccurred()))
+		Expect(reconsileInterface(types.NamespacedName{Name: "test-data-interface-complete", Namespace: SecondNamespace})).To(Not(HaveOccurred()))
+		Expect(reconsileProcess(types.NamespacedName{Name: "test-data-process", Namespace: Namespace})).To(Not(HaveOccurred()))
+		Expect(reconsileProcess(types.NamespacedName{Name: "test-data-process", Namespace: SecondNamespace})).To(Not(HaveOccurred()))
+		Expect(reconsileConstellation(namespacedFilteredNameTyped)).To(Not(HaveOccurred()))
+		Expect(reconsileConstellation(allNameTyped)).To(Not(HaveOccurred()))
+
+		By("Checking the latest Status of the custom resource")
+		Eventually(func() error {
+			constellation := &kokav1alpha1.Constellation{}
+			err := k8sClient.Get(ctx, namespacedFilteredNameTyped, constellation)
+			if err != nil {
+
+			}
+			if constellation.Status.ConstellationResult != nil {
+				Expect(len(constellation.Status.ConstellationResult.DataInterfaceList)).
+					To(Equal(3))
+				Expect(constellation.Status.ConstellationResult.DataInterfaceList[0].Type).
+					To(Equal("kafka"))
 				Expect(len(constellation.Status.ConstellationResult.DataProcessList)).
 					To(Equal(1))
 				return nil
@@ -276,7 +328,7 @@ var _ = Describe("Constellation controller", func() {
 			}
 			if constellation.Status.ConstellationResult != nil {
 				Expect(len(constellation.Status.ConstellationResult.DataInterfaceList)).
-					To(Equal(3))
+					To(Equal(4))
 				Expect(len(constellation.Status.ConstellationResult.DataProcessList)).
 					To(Equal(2))
 				return nil
