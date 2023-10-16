@@ -40,5 +40,6 @@ jobs:
           go-version: '1.21.1'
       - name: install operator-sdk
         run: make operator-sdk
+      - run: bin/operator-sdk generate kustomize manifests --verbose
       - name: make bundle
         run: make bundle bundle-build
