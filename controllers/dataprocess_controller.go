@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	logr "sigs.k8s.io/controller-runtime/pkg/log"
 
 	kokabieliv1alpha1 "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
 )
@@ -54,7 +54,7 @@ type DataProcessReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *DataProcessReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	log := logr.FromContext(ctx)
 
 	log.Info("Reconciling DataProcess", "dataprocess", req.NamespacedName)
 
@@ -145,7 +145,7 @@ func (r *DataProcessReconciler) requeAffectedProcessors(object client.Object) []
 	if dataInterface.Status.UsedReference == "" {
 		return ret
 	}
-	usedInDataProcesses, err := getProccessesForInterface(context.Background(), r.Client, dataInterface.Status.UsedReference)
+	usedInDataProcesses, err := getProcessesForInterface(context.Background(), r.Client, dataInterface.Status.UsedReference)
 	if err != nil {
 		return ret
 	}

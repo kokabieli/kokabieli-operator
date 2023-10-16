@@ -25,7 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	logr "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -50,7 +50,7 @@ type ConstellationReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	log := logr.FromContext(ctx)
 
 	log.Info("Reconciling Constellation", "constellation", req.NamespacedName)
 	constellation := &kokabieliv1alpha1.Constellation{}
@@ -121,7 +121,7 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 }
 
 func (r *ConstellationReconciler) fetch(ctx context.Context, constellationResult *kokabieliv1alpha1.ConstellationResult, filterOpts []client.ListOption) error {
-	log := log.FromContext(ctx)
+	log := logr.FromContext(ctx)
 
 	dataInterfaceList := &kokabieliv1alpha1.DataInterfaceList{}
 	dataProcessList := &kokabieliv1alpha1.DataProcessList{}

@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	logr "sigs.k8s.io/controller-runtime/pkg/log"
 
 	kokabieliv1alpha1 "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
 )
@@ -52,7 +52,7 @@ type DataInterfaceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *DataInterfaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	log := logr.FromContext(ctx)
 
 	log.Info("Reconciling DataInterface", "datainterface", req.NamespacedName)
 
@@ -78,7 +78,7 @@ func (r *DataInterfaceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	usedInDataProcesses, err := getProccessesForInterface(ctx, r.Client, ref)
+	usedInDataProcesses, err := getProcessesForInterface(ctx, r.Client, ref)
 	if err != nil {
 		log.Error(err, "Failed to get processes for Interface")
 		return ctrl.Result{}, err
@@ -110,7 +110,7 @@ func (r *DataInterfaceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 }
 
 func (r DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *kokabieliv1alpha1.DataInterface) error {
-	log := log.FromContext(ctx)
+	log := logr.FromContext(ctx)
 	allInterfaces := &kokabieliv1alpha1.DataInterfaceList{}
 	err := r.List(ctx, allInterfaces)
 	if err != nil {
@@ -175,7 +175,7 @@ func (r DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *kok
 	return nil
 }
 
-func getProccessesForInterface(ctx context.Context, c client.Client, ref string) ([]kokabieliv1alpha1.NamespacedName, error) {
+func getProcessesForInterface(ctx context.Context, c client.Client, ref string) ([]kokabieliv1alpha1.NamespacedName, error) {
 
 	dataProcesses := &kokabieliv1alpha1.DataProcessList{}
 	err := c.List(ctx, dataProcesses)
