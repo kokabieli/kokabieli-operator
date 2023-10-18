@@ -122,7 +122,7 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	configMap := &corev1.ConfigMap{}
-	index := make(map[string]string)
+	var index []kokabieliv1alpha1.ConstellationInfo
 	err = r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: constellation.Spec.TargetConfigMap}, configMap)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -130,7 +130,7 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			configMap.Name = constellation.Spec.TargetConfigMap
 			configMap.Namespace = req.Namespace
 			configMap.Data = map[string]string{
-				"index.json": "{}",
+				"index.json": "[]",
 			}
 			err = r.Create(ctx, configMap)
 			if err != nil {
@@ -151,9 +151,19 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err = json.Unmarshal([]byte(configMap.Data["index.json"]), &index)
 	if err != nil {
 		log.Error(err, "Failed to unmarshal index.json - assume a default empty index.json")
-		index = make(map[string]string)
+		index = []kokabieliv1alpha1.ConstellationInfo{}
 	}
-	index[constellation.Name+".json"] = constellation.Spec.Name
+	info := kokabieliv1alpha1.ConstellationInfo{
+		FileName:     constellation.Name + ".json",
+		Name:         constellation.Spec.Name,
+		Description:  asString(constellation.Spec.Description),
+		LastModified: constellationResult.LastUpdated,
+		Source: kokabieliv1alpha1.NamespacedName{
+			Namespace: constellation.Namespace,
+			Name:      constellation.Name,
+		},
+	}
+	index = appendOrSetVal(index, info)
 	data, err := json.Marshal(index)
 	if err != nil {
 		log.Error(err, "Failed to marshal index.json")
@@ -169,6 +179,16 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err = r.Update(ctx, configMap)
 
 	return ctrl.Result{}, nil
+}
+
+func appendOrSetVal(index []kokabieliv1alpha1.ConstellationInfo, info kokabieliv1alpha1.ConstellationInfo) []kokabieliv1alpha1.ConstellationInfo {
+	for i, item := range index {
+		if item.FileName == info.FileName {
+			index[i] = info
+			return index
+		}
+	}
+	return append(index, info)
 }
 
 func asString(s *string) string {

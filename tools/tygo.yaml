@@ -1,0 +1,3 @@
+packages:
+  - path: "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
+    output_path: "."
