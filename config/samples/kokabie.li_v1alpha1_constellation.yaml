@@ -1,4 +1,4 @@
-apiVersion: kokabie.li.kokabie.li/v1alpha1
+apiVersion: kokabie.li/v1alpha1
 kind: Constellation
 metadata:
   labels:
@@ -9,4 +9,7 @@ metadata:
     app.kubernetes.io/created-by: kokabieli-operator
   name: constellation-sample
 spec:
+  name: sample constellation
+  description: "This is a sample constellation"
+  targetConfigMap: "constellations"
 

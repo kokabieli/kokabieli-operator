@@ -5,7 +5,19 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kokabie.li
   resources:
   - constellations
   verbs:
@@ -17,13 +29,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - constellations/finalizers
   verbs:
   - update
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - constellations/status
   verbs:
@@ -31,7 +43,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - datainterfaces
   verbs:
@@ -43,13 +55,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - datainterfaces/finalizers
   verbs:
   - update
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - datainterfaces/status
   verbs:
@@ -57,7 +69,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - dataprocesses
   verbs:
@@ -69,13 +81,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - dataprocesses/finalizers
   verbs:
   - update
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - dataprocesses/status
   verbs:

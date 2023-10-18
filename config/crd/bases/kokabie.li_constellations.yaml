@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
-  name: constellations.kokabie.li.kokabie.li
+  name: constellations.kokabie.li
 spec:
-  group: kokabie.li.kokabie.li
+  group: kokabie.li
   names:
     kind: Constellation
     listKind: ConstellationList
@@ -34,6 +34,9 @@ spec:
           spec:
             description: ConstellationSpec defines the desired state of Constellation
             properties:
+              description:
+                description: Description is a human-readable description of the constellation
+                type: string
               filters:
                 description: INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                   Filters is a list of filters that are used to select the data interfaces
@@ -54,6 +57,14 @@ spec:
                       type: array
                   type: object
                 type: array
+              name:
+                description: Name is the displayed name of the constellation
+                type: string
+              targetConfigMap:
+                description: TargetConfigMap is the name of the config map that is
+                  used to store the constellation it uses the same namespace as the
+                  constellation
+                type: string
             type: object
           status:
             description: ConstellationStatus defines the observed state of Constellation
@@ -242,6 +253,13 @@ spec:
                           type: string
                       type: object
                     type: array
+                  description:
+                    type: string
+                  lastUpdated:
+                    format: date-time
+                    type: string
+                  name:
+                    type: string
                 required:
                 - dataInterfaceList
                 - dataProcessList

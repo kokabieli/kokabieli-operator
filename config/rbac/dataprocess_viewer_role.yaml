@@ -12,7 +12,7 @@ metadata:
   name: dataprocess-viewer-role
 rules:
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - dataprocesses
   verbs:
@@ -20,7 +20,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - dataprocesses/status
   verbs:

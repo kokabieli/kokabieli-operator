@@ -37,6 +37,22 @@ type ConstellationSpec struct {
 	// Filters is a list of filters that are used to select the data interfaces and data processes
 	// If empty, all data interfaces and data processes are used
 	Filters []Filter `json:"filters,omitempty"`
+
+	// TargetConfigMap is the name of the config map that is used to store the constellation
+	// it uses the same namespace as the constellation
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// +required
+	TargetConfigMap string `json:"targetConfigMap,omitempty"`
+
+	// Name is the displayed name of the constellation
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// +required
+	Name string `json:"name,omitempty"`
+
+	// Description is a human-readable description of the constellation
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// +optional
+	Description *string `json:"description,omitempty"`
 }
 
 type ConstellationInterface struct {
@@ -69,29 +85,32 @@ type ConstellationEdge struct {
 
 type ConstellationDataProcess struct {
 	// Name is the displayed name of the data process
-	//+operator-sdk:csv:customresourcedefinitions:type=spec
+	//+operator-sdk:csv:customresourcedefinitions:type=status
 	Name string `json:"name,omitempty"`
 	// Type is the type of the data process (e.g. "spring-cloud-stream", "kafka-streams", "spark-streaming")
-	//+operator-sdk:csv:customresourcedefinitions:type=spec
+	//+operator-sdk:csv:customresourcedefinitions:type=status
 	Type string `json:"type,omitempty"`
 	// Description is a human-readable description of the data process
-	//+operator-sdk:csv:customresourcedefinitions:type=spec
+	//+operator-sdk:csv:customresourcedefinitions:type=status
 	Description string `json:"description,omitempty"`
 	// Inputs is a list of data interfaces that are used as input for the data process
-	//+operator-sdk:csv:customresourcedefinitions:type=spec
+	//+operator-sdk:csv:customresourcedefinitions:type=status
 	Inputs []ConstellationEdge `json:"inputs,omitempty"`
 	// Outputs is a list of data interfaces that are used as output for the data process
-	//+operator-sdk:csv:customresourcedefinitions:type=spec
+	//+operator-sdk:csv:customresourcedefinitions:type=status
 	Outputs []ConstellationEdge `json:"outputs,omitempty"`
 	// Labels is a set of labels for the data interface
-	//+operator-sdk:csv:customresourcedefinitions:type=spec
+	//+operator-sdk:csv:customresourcedefinitions:type=status
 	Labels map[string]string `json:"labels,omitempty"`
 	// Source is the namespaced name of the data process
-	//+operator-sdk:csv:customresourcedefinitions:type=spec
+	//+operator-sdk:csv:customresourcedefinitions:type=status
 	Source NamespacedName `json:"source,omitempty"`
 }
 
 type ConstellationResult struct {
+	Name              string                     `json:"name,omitempty"`
+	Description       string                     `json:"description,omitempty"`
+	LastUpdated       metav1.Time                `json:"lastUpdated,omitempty"`
 	DataInterfaceList []ConstellationInterface   `json:"dataInterfaceList"`
 	DataProcessList   []ConstellationDataProcess `json:"dataProcessList"`
 }
