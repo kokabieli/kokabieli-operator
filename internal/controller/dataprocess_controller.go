@@ -1,5 +1,5 @@
 /*
-Copyright 2023.
+Copyright 2023 Florian Schrag.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package controller
 
 import (
 	"context"
@@ -23,7 +23,6 @@ import (
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 	"sort"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -128,11 +127,11 @@ func (r *DataProcessReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *DataProcessReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&kokabieliv1alpha1.DataProcess{}).
-		Watches(&source.Kind{Type: &kokabieliv1alpha1.DataInterface{}}, handler.EnqueueRequestsFromMapFunc(r.requeAffectedProcessors)).
+		Watches(&kokabieliv1alpha1.DataInterface{}, handler.EnqueueRequestsFromMapFunc(r.requeAffectedProcessors)).
 		Complete(r)
 }
 
-func (r *DataProcessReconciler) requeAffectedProcessors(object client.Object) []reconcile.Request {
+func (r *DataProcessReconciler) requeAffectedProcessors(_ context.Context, object client.Object) []reconcile.Request {
 	var ret []reconcile.Request
 
 	dataInterface := object.(*kokabieliv1alpha1.DataInterface)

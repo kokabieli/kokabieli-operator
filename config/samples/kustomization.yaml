@@ -1,6 +1,6 @@
-## Append samples you want in your CSV to this file as resources ##
+## Append samples of your project ##
 resources:
+- kokabie.li_v1alpha1_constellation.yaml
 - kokabie.li_v1alpha1_datainterface.yaml
 - kokabie.li_v1alpha1_dataprocess.yaml
-- kokabie.li_v1alpha1_constellation.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
