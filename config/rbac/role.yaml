@@ -1,0 +1,84 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - constellations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - constellations/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - constellations/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - datainterfaces
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - datainterfaces/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - datainterfaces/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - dataprocesses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - dataprocesses/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kokabie.li.kokabie.li
+  resources:
+  - dataprocesses/status
+  verbs:
+  - get
+  - patch
+  - update
