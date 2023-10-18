@@ -61,13 +61,17 @@ var _ = Describe("Constellation controller", func() {
 	}
 
 	createSampleConstellations := func() {
+		d := "description of the constellation"
 		constellation := &kokav1alpha1.Constellation{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      NamespaceFilteredConstellation,
 				Namespace: Namespace,
 			},
 			Spec: kokav1alpha1.ConstellationSpec{
-				Filters: make([]kokav1alpha1.Filter, 1),
+				Filters:         make([]kokav1alpha1.Filter, 1),
+				Name:            "Namespace filtered constellation",
+				Description:     &d,
+				TargetConfigMap: "test",
 			},
 		}
 		constellation.Spec.Filters[0].Namespaces = []string{Namespace}
@@ -81,7 +85,9 @@ var _ = Describe("Constellation controller", func() {
 				Namespace: Namespace,
 			},
 			Spec: kokav1alpha1.ConstellationSpec{
-				Filters: make([]kokav1alpha1.Filter, 0),
+				Filters:         make([]kokav1alpha1.Filter, 0),
+				TargetConfigMap: "test",
+				Name:            "Everything",
 			},
 		}
 
@@ -322,10 +328,7 @@ var _ = Describe("Constellation controller", func() {
 		By("Checking the latest Status of the custom resource for all namescaces")
 		Eventually(func() error {
 			constellation := &kokav1alpha1.Constellation{}
-			err := k8sClient.Get(ctx, allNameTyped, constellation)
-			if err != nil {
-
-			}
+			Expect(k8sClient.Get(ctx, allNameTyped, constellation)).To(Succeed())
 			if constellation.Status.ConstellationResult != nil {
 				Expect(len(constellation.Status.ConstellationResult.DataInterfaceList)).
 					To(Equal(4))
@@ -336,5 +339,19 @@ var _ = Describe("Constellation controller", func() {
 			fmt.Printf("constellation.Status: %v\n", constellation.Status)
 			return fmt.Errorf("no constellation result found")
 		}, time.Second*10, time.Second).Should(Succeed())
+
+		By("Expect the configmap to be filled")
+		Eventually(func() error {
+			configMap := &corev1.ConfigMap{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: "test"}, configMap)).To(Succeed())
+
+			Expect(configMap.Data["index.json"]).To(Not(BeEmpty()))
+			Expect(configMap.Data[AllConstellation+".json"]).To(Not(BeEmpty()))
+			Expect(configMap.Data[NamespaceFilteredConstellation+".json"]).To(Not(BeEmpty()))
+
+			return nil
+
+		}, time.Second*10, time.Second).Should(Succeed())
+
 	})
 })

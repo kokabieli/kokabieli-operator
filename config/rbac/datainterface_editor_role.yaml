@@ -12,7 +12,7 @@ metadata:
   name: datainterface-editor-role
 rules:
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - datainterfaces
   verbs:
@@ -24,7 +24,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - kokabie.li.kokabie.li
+  - kokabie.li
   resources:
   - datainterfaces/status
   verbs:

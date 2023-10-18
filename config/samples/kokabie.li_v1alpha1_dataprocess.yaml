@@ -1,4 +1,4 @@
-apiVersion: kokabie.li.kokabie.li/v1alpha1
+apiVersion: kokabie.li/v1alpha1
 kind: DataProcess
 metadata:
   labels:
