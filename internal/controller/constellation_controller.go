@@ -1,5 +1,5 @@
 /*
-Copyright 2023.
+Copyright 2023 Florian Schrag.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package controller
 
 import (
 	"context"
@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logr "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // ConstellationReconciler reconciles a Constellation object
@@ -141,12 +140,12 @@ func (r *ConstellationReconciler) fetch(ctx context.Context, constellationResult
 func (r *ConstellationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&kokabieliv1alpha1.Constellation{}).
-		Watches(&source.Kind{Type: &kokabieliv1alpha1.DataInterface{}}, handler.EnqueueRequestsFromMapFunc(r.requeueAllConstellations)).
-		Watches(&source.Kind{Type: &kokabieliv1alpha1.DataProcess{}}, handler.EnqueueRequestsFromMapFunc(r.requeueAllConstellations)).
+		Watches(&kokabieliv1alpha1.DataInterface{}, handler.EnqueueRequestsFromMapFunc(r.requeueAllConstellations)).
+		Watches(&kokabieliv1alpha1.DataProcess{}, handler.EnqueueRequestsFromMapFunc(r.requeueAllConstellations)).
 		Complete(r)
 }
 
-func (r *ConstellationReconciler) requeueAllConstellations(_ client.Object) []reconcile.Request {
+func (r *ConstellationReconciler) requeueAllConstellations(_ context.Context, _ client.Object) []reconcile.Request {
 	var ret []reconcile.Request
 	list := &kokabieliv1alpha1.ConstellationList{}
 	err := r.List(context.Background(), list)

@@ -1,5 +1,5 @@
 /*
-Copyright 2023.k8sClient
+Copyright 2023 Florian Schrag.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,9 +30,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	kokabieliv1alpha1 "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
-	"github.com/kokabieli/kokabieli-operator/controllers"
+	"github.com/kokabieli/kokabieli-operator/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -67,8 +68,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   9443,
+		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "b2841994.kokabie.li",
@@ -89,25 +89,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.DataInterfaceReconciler{
+	if err = (&controller.ConstellationReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Constellation")
+		os.Exit(1)
+	}
+	if err = (&controller.DataInterfaceReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DataInterface")
 		os.Exit(1)
 	}
-	if err = (&controllers.DataProcessReconciler{
+	if err = (&controller.DataProcessReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DataProcess")
-		os.Exit(1)
-	}
-	if err = (&controllers.ConstellationReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Constellation")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
