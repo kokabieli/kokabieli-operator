@@ -1,6 +1,7 @@
 name: publish operator
 
 on:
+  merge_group:
   schedule:
     - cron: '22 21 * * *'
   push:
