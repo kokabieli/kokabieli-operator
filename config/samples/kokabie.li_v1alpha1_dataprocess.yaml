@@ -2,21 +2,105 @@ apiVersion: kokabie.li/v1alpha1
 kind: DataProcess
 metadata:
   labels:
-    app.kubernetes.io/name: dataprocess
-    app.kubernetes.io/instance: dataprocess-sample
-    app.kubernetes.io/part-of: kokabieli-operator
+    app.kubernetes.io/name: portfolio-flatter
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: kokabieli-operator
-  name: dataprocess-sample
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: portfolio-flatter
 spec:
-    name: dataprocess-sample
-    type: dataprocess
-    description: "This is a sample DataProcess"
-    inputs:
-        - reference: "datainterface-sample"
-          trigger: true
-          description: "This is a sample input"
-    outputs:
-        - reference: "datainterface-sample"
-          description: "This is a sample output"
-          trigger: true
+  name: portfolio flatter
+  description: "This flattens the portfolio data with codes"
+  type: spring-cloud-stream
+  inputs:
+    - reference: t/portfolio
+      info: "consume all portfolios"
+      trigger: true
+    - reference: db/codes
+      info: "fetch relevant code - retries if code not found"
+      trigger: false
+  outputs:
+    - reference: t/portfolio-flat
+      info: "per portfolio, emit a flat portfolio"
+      trigger: true
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataProcess
+metadata:
+  labels:
+    app.kubernetes.io/name: client-flatter
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: client-flatter
+spec:
+  name: client flatter
+  description: "This flattens the client data with codes"
+  type: spring-cloud-stream
+  inputs:
+    - reference: t/client
+      info: "consume all clients"
+      trigger: true
+    - reference: db/codes
+      info: "fetch relevant code - retries if code not found"
+      trigger: false
+  outputs:
+    - reference: t/client-flat
+      info: "per client, emit a flat client"
+      trigger: true
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataProcess
+metadata:
+  labels:
+    app.kubernetes.io/name: code-persister
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: code-persister
+spec:
+  name: code persister
+  description: "This persists the code data"
+  type: spring-cloud-stream
+  inputs:
+    - reference: t/codes
+      info: "consume all codes"
+      trigger: true
+  outputs:
+    - reference: db/codes
+      info: "persist all codes"
+      trigger: true
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataProcess
+metadata:
+  labels:
+    app.kubernetes.io/name: client-portfolio-merger
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: client-portfolio-merger
+spec:
+  name: client portfolio merger
+  description: "This merges the client data with the portfolio data"
+  type: spring-cloud-stream
+  inputs:
+    - reference: t/client-flat
+      info: "consume all clients"
+      trigger: true
+    - reference: t/portfolio-flat
+      info: "consume all portfolios"
+      trigger: true
+    - reference: db/client-portfolio-merger
+      info: "read relevant cache client portfolios in db"
+      trigger: false
+  outputs:
+    - reference: t/client-portfolio
+      info: "per client (or portfolio change), emit a client with all portfolios"
+      trigger: true
+    - reference: db/client-portfolio-merger
+      info: "temporary cache client portfolios in db"
+      trigger: false

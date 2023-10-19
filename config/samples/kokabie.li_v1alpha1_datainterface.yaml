@@ -2,14 +2,126 @@ apiVersion: kokabie.li/v1alpha1
 kind: DataInterface
 metadata:
   labels:
-    app.kubernetes.io/name: datainterface
-    app.kubernetes.io/instance: datainterface-sample
-    app.kubernetes.io/part-of: kokabieli-operator
+    app.kubernetes.io/name: client
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: kokabieli-operator
-  name: datainterface-sample
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: client
 spec:
-  name: datainterface-sample
-  type: datainterface
-  description: "This is a sample DataInterface"
-
+  reference: t/client
+  name: client
+  type: topic
+  description: "This contains a stream of clients"
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataInterface
+metadata:
+  labels:
+    app.kubernetes.io/name: client-flat
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: client-flat
+spec:
+  reference: t/client-flat
+  name: client-flat
+  type: flat
+  description: "This contains a stream of clients enriched with code data"
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataInterface
+metadata:
+  labels:
+    app.kubernetes.io/name: portfolio
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: portfolio
+spec:
+  reference: t/portfolio
+  name: portfolio
+  type: topic
+  description: "This contains a stream of portfolios"
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataInterface
+metadata:
+  labels:
+    app.kubernetes.io/name: portfolio-flat
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: portfolio-flat
+spec:
+  reference: t/portfolio-flat
+  name: portfolio-flat
+  type: flat
+  description: "This contains a stream of portfolios enriched with code data"
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataInterface
+metadata:
+  labels:
+    app.kubernetes.io/name: client-portfolio
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: client-portfolio
+spec:
+  reference: t/client-portfolio
+  name: client-portfolio
+  type: topic
+  description: "This contains a stream of clients merged with their portfolios"
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataInterface
+metadata:
+  labels:
+    app.kubernetes.io/name: codes
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: codes
+spec:
+  reference: t/codes
+  name: codes
+  type: topic
+  description: "This contains a stream of codes"
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataInterface
+metadata:
+  labels:
+    app.kubernetes.io/name: codes-db
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: codes-db
+spec:
+  reference: db/codes
+  name: codes-db
+  type: db
+  description: "This contains all the codes in a database"
+---
+apiVersion: kokabie.li/v1alpha1
+kind: DataInterface
+metadata:
+  labels:
+    app.kubernetes.io/name: client-portfolio-merger-db
+    app.kubernetes.io/instance: kokabieli-sample
+    app.kubernetes.io/part-of: kokabieli-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-sample
+  name: client-portfolio-merger-db
+spec:
+  reference: db/client-portfolio-merger
+  name: client-portfolio-merger-db
+  type: db
+  description: "This contains all the processing date for the client-portfolio merger"

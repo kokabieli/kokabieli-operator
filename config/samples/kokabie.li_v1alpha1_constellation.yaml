@@ -7,9 +7,9 @@ metadata:
     app.kubernetes.io/part-of: kokabieli-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: kokabieli-operator
-  name: constellation-sample
+  name: full-constellation
 spec:
-  name: sample constellation
-  description: "This is a sample constellation"
+  name: Everything
+  description: "This is a unfiltered constellation"
   targetConfigMap: "constellations"
 
