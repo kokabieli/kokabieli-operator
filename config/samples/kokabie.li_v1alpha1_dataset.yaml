@@ -1,0 +1,31 @@
+apiVersion: kokabie.li.kokabie.li/v1alpha1
+kind: DataSet
+metadata:
+  labels:
+    app.kubernetes.io/name: dataset
+    app.kubernetes.io/instance: dataset-sample
+    app.kubernetes.io/part-of: kokabieli-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kokabieli-operator
+  name: dataset-sample
+spec:
+  interfaces:
+    - name: t/portfolio3
+      description: "topic"
+      type: topic
+      labels:
+        "test1": "test2"
+  processes:
+    - name: portfolio flatter
+      description: "This flattens the portfolio data with codes"
+      type: spring-cloud-stream
+      inputs:
+        - reference: t/portfolio3
+          info: "consume all portfolios"
+          trigger: true
+      outputs:
+        - reference: t/portfolio-flat3
+          info: "per portfolio, emit a flat portfolio"
+          trigger: true
+      labels:
+        "test1": "test1"

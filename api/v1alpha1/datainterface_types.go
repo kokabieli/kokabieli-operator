@@ -39,6 +39,10 @@ type DataInterfaceSpec struct {
 	// Description is a human-readable description of the data interface
 	// +optional
 	Description *string `json:"description,omitempty"`
+
+	// Labels is a list of labels that are added to the data interface (mainly used for datasets)
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // DataInterfaceStatus defines the observed state of DataInterface
