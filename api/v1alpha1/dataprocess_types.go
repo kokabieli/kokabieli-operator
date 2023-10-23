@@ -54,6 +54,9 @@ type DataProcessSpec struct {
 	Inputs []Edge `json:"inputs,omitempty"`
 	// Outputs is a list of data interfaces that are used as output for the data process
 	Outputs []Edge `json:"outputs,omitempty"`
+	// Labels is a list of labels that are added to the data process (mainly used for datasets)
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // DataProcessStatus defines the observed state of DataProcess

@@ -38,6 +38,12 @@ spec:
                 description: Description is a human-readable description of the data
                   interface
                 type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels is a list of labels that are added to the data
+                  interface (mainly used for datasets)
+                type: object
               name:
                 description: Name is the displayed name of the data interface
                 type: string

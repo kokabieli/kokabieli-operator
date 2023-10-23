@@ -59,6 +59,16 @@ var _ = Describe("Constellation controller", func() {
 		})
 		return err
 	}
+	reconsileSet := func(name types.NamespacedName) error {
+		reconsiler := &DataSetReconciler{
+			Client: k8sClient,
+			Scheme: k8sClient.Scheme(),
+		}
+		_, err := reconsiler.Reconcile(ctx, reconcile.Request{
+			NamespacedName: name,
+		})
+		return err
+	}
 
 	createSampleConstellations := func() {
 		d := "description of the constellation"
@@ -203,6 +213,47 @@ var _ = Describe("Constellation controller", func() {
 		}
 		err = k8sClient.Create(ctx, dataProcess2)
 		Expect(err).To(Not(HaveOccurred()))
+	}
+
+	createSampleDataSet := func() {
+		dataSet1 := &kokav1alpha1.DataSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-data-set",
+				Namespace: Namespace,
+				Labels: map[string]string{
+					"test":  "test",
+					"test3": "test3",
+				},
+			},
+			Spec: kokav1alpha1.DataSetSpec{
+				Interfaces: []kokav1alpha1.DataInterfaceSpec{
+					{
+						Name: "my-interface-32",
+						Type: "kafka",
+						Labels: map[string]string{
+							"test":  "test1",
+							"test2": "test2",
+						},
+					},
+				},
+				Processes: []kokav1alpha1.DataProcessSpec{
+					{
+						Name:        "my-process-32",
+						Type:        "kafka-streams",
+						Description: "my-process",
+						Inputs: []kokav1alpha1.Edge{
+							{Reference: Namespace + "/my-interface", Info: "hello", Trigger: true},
+						},
+						Outputs: []kokav1alpha1.Edge{
+							{Reference: "my-interface-2", Info: "hello", Trigger: true},
+						},
+					},
+				},
+			},
+			Status: kokav1alpha1.DataSetStatus{},
+		}
+
+		Expect(k8sClient.Create(ctx, dataSet1)).To(Not(HaveOccurred()))
 	}
 
 	namespace := &corev1.Namespace{
@@ -353,5 +404,23 @@ var _ = Describe("Constellation controller", func() {
 
 		}, time.Second*10, time.Second).Should(Succeed())
 
+		By("Loading the dataset & syncing")
+		createSampleDataSet()
+		Expect(reconsileSet(types.NamespacedName{Namespace: Namespace, Name: "test-data-set"})).To(Not(HaveOccurred()))
+
+		By("Checking the status of our dataset that we created two objects and they exist")
+		Eventually(func() error {
+			dataSet := &kokav1alpha1.DataSet{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: "test-data-set"}, dataSet)).To(Succeed())
+
+			Expect(len(dataSet.Status.Interfaces)).To(Equal(1))
+			Expect(len(dataSet.Status.Processes)).To(Equal(1))
+
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: dataSet.Status.Interfaces["my-interface-32"].Name}, &kokav1alpha1.DataInterface{})).To(Succeed())
+			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: dataSet.Status.Processes["my-process-32"].Name}, &kokav1alpha1.DataProcess{})).To(Succeed())
+
+			return nil
+
+		})
 	})
 })

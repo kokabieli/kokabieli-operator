@@ -64,6 +64,12 @@ spec:
                       type: boolean
                   type: object
                 type: array
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels is a list of labels that are added to the data
+                  process (mainly used for datasets)
+                type: object
               name:
                 description: Name is the displayed name of the data process
                 type: string
