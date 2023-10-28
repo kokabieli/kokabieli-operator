@@ -26,8 +26,12 @@ import (
 
 // DataSetSpec defines the desired state of DataSet
 type DataSetSpec struct {
+	// Interfaces is a list of data interfaces that are provided by the data set
 	Interfaces []DataInterfaceSpec `json:"interfaces,omitempty"`
-	Processes  []DataProcessSpec   `json:"processes,omitempty"`
+	// Processes is a list of data processes that are provided by the data set
+	Processes []DataProcessSpec `json:"processes,omitempty"`
+	// Namespaced is true to make all data interfaces and data processes references namespaced (false by default)
+	Namespaced bool `json:"namespaced,omitempty"`
 }
 
 // DataSetStatus defines the observed state of DataSet

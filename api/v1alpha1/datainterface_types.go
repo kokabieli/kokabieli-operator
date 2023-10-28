@@ -34,13 +34,19 @@ type DataInterfaceSpec struct {
 	// if empty, the name will be used as reference instead
 	// +optional
 	Reference *string `json:"reference,omitempty"`
+
+	// Namespaced is true if the data interface is namespaced (false by default)
+	// if true, the data interface adds the namespace to the reference to make it cluster-wide unique
+	// +optional
+	Namespaced *bool `json:"namespaced,omitempty"`
+
 	// Type is the type of the data interface (e.g. "topic", "queue", "database", "file")
 	Type string `json:"type,omitempty"`
 	// Description is a human-readable description of the data interface
 	// +optional
 	Description *string `json:"description,omitempty"`
 
-	// Labels is a list of labels that are added to the data interface (mainly used for datasets)
+	// Labels is a list of labels that are added to the data interface (only used for datasets)
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 }

@@ -65,6 +65,11 @@ func (r *DataInterfaceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	ref := dataInterfaceReference(dataInterface)
 	if dataInterface.Status.UsedReference != ref {
+		err = r.Get(ctx, req.NamespacedName, dataInterface)
+		if err != nil {
+			log.Error(err, "Failed to refetch Interface")
+			return ctrl.Result{}, err
+		}
 		dataInterface.Status.UsedReference = ref
 		err = r.Status().Update(ctx, dataInterface)
 		if err != nil {
@@ -114,13 +119,10 @@ func (r *DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *ko
 	}
 	// Check for duplicate references
 	for _, dataInterface := range allInterfaces.Items {
+		if dataInterface.Status.UsedReference == "" {
+			continue
+		}
 		if di.Status.UsedReference == dataInterface.Status.UsedReference && (dataInterface.Namespace != di.Namespace || dataInterface.Name != di.Name) {
-
-			err = r.Get(ctx, types.NamespacedName{Namespace: di.Namespace, Name: di.Name}, di)
-			if err != nil {
-				log.Error(err, "Failed to refetch Interface")
-				return err
-			}
 
 			condition := metav1.Condition{
 				Type:    "UniqueReference",
@@ -129,6 +131,11 @@ func (r *DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *ko
 				Message: "DuplicateReference for object: " + dataInterface.Namespace + "/" + dataInterface.Name,
 			}
 			if !meta.IsStatusConditionFalse(di.Status.Conditions, condition.Type) {
+				err = r.Get(ctx, types.NamespacedName{Namespace: di.Namespace, Name: di.Name}, di)
+				if err != nil {
+					log.Error(err, "Failed to refetch Interface")
+					return err
+				}
 				log.Error(err, "Duplicate reference",
 					"reference", di.Status.UsedReference,
 					"object", dataInterface.Namespace+"/"+dataInterface.Name)
@@ -138,6 +145,7 @@ func (r *DataInterfaceReconciler) checkForDuplicates(ctx context.Context, di *ko
 					log.Error(err, "Failed to update Interface status")
 					return err
 				}
+				return nil
 			}
 			return nil
 		}
@@ -181,12 +189,12 @@ func getProcessesForInterface(ctx context.Context, c client.Client, ref string) 
 	for _, dataProcess := range dataProcesses.Items {
 		refName := kokabieliv1alpha1.NamespacedName{Namespace: dataProcess.Namespace, Name: dataProcess.Name}
 		for _, input := range dataProcess.Spec.Inputs {
-			if input.Reference == ref {
+			if input.BuildTargetReference(dataProcess.Namespace) == ref {
 				usedInDataProcesses = append(usedInDataProcesses, refName)
 			}
 		}
 		for _, output := range dataProcess.Spec.Outputs {
-			if output.Reference == ref {
+			if output.BuildTargetReference(dataProcess.Namespace) == ref {
 				usedInDataProcesses = append(usedInDataProcesses, refName)
 			}
 		}
@@ -214,6 +222,9 @@ func equalNamespacedNames(processes []kokabieliv1alpha1.NamespacedName, processe
 
 func dataInterfaceReference(dataInterface *kokabieliv1alpha1.DataInterface) string {
 	if dataInterface.Spec.Reference != nil {
+		if dataInterface.Spec.Namespaced != nil && *dataInterface.Spec.Namespaced {
+			return dataInterface.Namespace + "/" + *dataInterface.Spec.Reference
+		}
 		return *dataInterface.Spec.Reference
 	}
 	return dataInterface.Namespace + "/" + dataInterface.Name

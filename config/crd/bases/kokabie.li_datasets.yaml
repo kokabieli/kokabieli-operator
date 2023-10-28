@@ -36,6 +36,8 @@ spec:
             description: DataSetSpec defines the desired state of DataSet
             properties:
               interfaces:
+                description: Interfaces is a list of data interfaces that are provided
+                  by the data set
                 items:
                   description: DataInterfaceSpec defines the desired state of DataInterface
                   properties:
@@ -47,11 +49,16 @@ spec:
                       additionalProperties:
                         type: string
                       description: Labels is a list of labels that are added to the
-                        data interface (mainly used for datasets)
+                        data interface (only used for datasets)
                       type: object
                     name:
                       description: Name is the displayed name of the data interface
                       type: string
+                    namespaced:
+                      description: Namespaced is true if the data interface is namespaced
+                        (false by default) if true, the data interface adds the namespace
+                        to the reference to make it cluster-wide unique
+                      type: boolean
                     reference:
                       description: Reference is a cluster-wide unique identifier for
                         the data interface if empty, the name will be used as reference
@@ -63,7 +70,13 @@ spec:
                       type: string
                   type: object
                 type: array
+              namespaced:
+                description: Namespaced is true to make all data interfaces and data
+                  processes references namespaced (false by default)
+                type: boolean
               processes:
+                description: Processes is a list of data processes that are provided
+                  by the data set
                 items:
                   description: DataProcessSpec defines the desired state of DataProcess
                   properties:
@@ -86,6 +99,12 @@ spec:
                             description: Info is a human-readable description of the
                               data interface
                             type: string
+                          namespaced:
+                            description: Namespaced is true if the data interface
+                              is namespaced (false by default) if true, the data interface
+                              adds the namespace to the reference to make it cluster-wide
+                              unique
+                            type: boolean
                           reference:
                             description: References the data interface
                             type: string
@@ -101,7 +120,7 @@ spec:
                       additionalProperties:
                         type: string
                       description: Labels is a list of labels that are added to the
-                        data process (mainly used for datasets)
+                        data process (only used for datasets)
                       type: object
                     name:
                       description: Name is the displayed name of the data process
@@ -121,6 +140,12 @@ spec:
                             description: Info is a human-readable description of the
                               data interface
                             type: string
+                          namespaced:
+                            description: Namespaced is true if the data interface
+                              is namespaced (false by default) if true, the data interface
+                              adds the namespace to the reference to make it cluster-wide
+                              unique
+                            type: boolean
                           reference:
                             description: References the data interface
                             type: string
