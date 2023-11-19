@@ -218,28 +218,28 @@ var _ = Describe("Constellation controller", func() {
 		dataInterfaceRef1 := buildDataInterface(Namespace, "test-data-interface-ref1", nil, kokav1alpha1.DataInterfaceSpec{
 			Name:        "Data Interface Ref 1",
 			Reference:   sp("ref1"),
-			Type:        "kafka",
+			Type:        randChars(6),
 			Description: sp(randChars(30)),
 		})
 		create(dataInterfaceRef1)
 		dataInterfaceRef2 := buildDataInterface(Namespace, "test-data-interface-ref2", nil, kokav1alpha1.DataInterfaceSpec{
 			Name:        "Data Interface Ref 2",
 			Reference:   sp("ref2"),
-			Type:        "kafka",
+			Type:        randChars(6),
 			Description: sp(randChars(30)),
 		})
 		create(dataInterfaceRef2)
 		dataInterfaceRef3 := buildDataInterface(Namespace, "test-data-interface-ref3", nil, kokav1alpha1.DataInterfaceSpec{
 			Name:        "Data Interface Ref 3",
 			Reference:   sp("ref3"),
-			Type:        "kafka",
+			Type:        randChars(6),
 			Description: sp(randChars(30)),
 		})
 		create(dataInterfaceRef3)
 		dataInterfaceRef4 := buildDataInterface(Namespace, "test-data-interface-ref4", nil, kokav1alpha1.DataInterfaceSpec{
 			Name:        "Data Interface Ref 4",
 			Reference:   sp("ref4"),
-			Type:        "kafka",
+			Type:        randChars(6),
 			Description: sp(randChars(30)),
 		})
 		create(dataInterfaceRef4)
@@ -276,10 +276,17 @@ var _ = Describe("Constellation controller", func() {
 			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Outputs[0].Reference).To(Equal("ref3"))
 			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Outputs[1].Reference).To(Equal("ref4"))
 
-			g.Expect(f.Status.ConstellationResult.DataInterfaceList[1].Type).To(Equal(dataInterfaceRef1.Spec.Type))
-			g.Expect(f.Status.ConstellationResult.DataInterfaceList[2].Type).To(Equal(dataInterfaceRef2.Spec.Type))
-			g.Expect(f.Status.ConstellationResult.DataInterfaceList[3].Type).To(Equal(dataInterfaceRef3.Spec.Type))
-			g.Expect(f.Status.ConstellationResult.DataInterfaceList[4].Type).To(Equal(dataInterfaceRef4.Spec.Type))
+			types := []string{}
+			for _, i := range f.Status.ConstellationResult.DataInterfaceList {
+				types = append(types, i.Type)
+			}
+
+			g.Expect(types).To(ContainElements(
+				testDataInterface.Spec.Type,
+				dataInterfaceRef1.Spec.Type,
+				dataInterfaceRef2.Spec.Type,
+				dataInterfaceRef3.Spec.Type,
+				dataInterfaceRef4.Spec.Type))
 		}, 20*time.Second, time.Second).Should(Succeed())
 
 	})
