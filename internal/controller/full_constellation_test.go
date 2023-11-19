@@ -2,425 +2,548 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	kokav1alpha1 "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	kokav1alpha1 "github.com/kokabieli/kokabieli-operator/api/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Constellation controller", func() {
 	const Namespace = "test-kokabieli-constellation"
 	const SecondNamespace = "test-kokabieli-constellation-second"
-	const NamespaceFilteredConstellation = "test-constellation"
-	const AllConstellation = "test-constellation-all"
 
-	ctx := context.Background()
-
-	namespacedFilteredNameTyped := types.NamespacedName{Name: NamespaceFilteredConstellation, Namespace: Namespace}
-	allNameTyped := types.NamespacedName{Name: AllConstellation, Namespace: Namespace}
-
-	reconsileConstellation := func(name types.NamespacedName) error {
-		constellationReconsiler := &ConstellationReconciler{
-			Client: k8sClient,
-			Scheme: k8sClient.Scheme(),
-		}
-
-		_, err := constellationReconsiler.Reconcile(ctx, reconcile.Request{
-			NamespacedName: name,
-		})
-		return err
-	}
-	reconsileInterface := func(name types.NamespacedName) error {
-		reconsiler := &DataInterfaceReconciler{
-			Client: k8sClient,
-			Scheme: k8sClient.Scheme(),
-		}
-
-		_, err := reconsiler.Reconcile(ctx, reconcile.Request{
-			NamespacedName: name,
-		})
-		return err
-	}
-	reconsileProcess := func(name types.NamespacedName) error {
-		reconsiler := &DataProcessReconciler{
-			Client: k8sClient,
-			Scheme: k8sClient.Scheme(),
-		}
-
-		_, err := reconsiler.Reconcile(ctx, reconcile.Request{
-			NamespacedName: name,
-		})
-		return err
-	}
-	reconsileSet := func(name types.NamespacedName) error {
-		reconsiler := &DataSetReconciler{
-			Client: k8sClient,
-			Scheme: k8sClient.Scheme(),
-		}
-		_, err := reconsiler.Reconcile(ctx, reconcile.Request{
-			NamespacedName: name,
-		})
-		return err
-	}
-
-	createSampleConstellations := func() {
-		d := "description of the constellation"
-		constellation := &kokav1alpha1.Constellation{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      NamespaceFilteredConstellation,
-				Namespace: Namespace,
-			},
-			Spec: kokav1alpha1.ConstellationSpec{
-				Filters:         make([]kokav1alpha1.Filter, 1),
-				Name:            "Namespace filtered constellation",
-				Description:     &d,
-				TargetConfigMap: "test",
-			},
-		}
-		constellation.Spec.Filters[0].Namespaces = []string{Namespace}
-
-		err := k8sClient.Create(ctx, constellation)
-		Expect(err).To(Not(HaveOccurred()))
-
-		constellation2 := &kokav1alpha1.Constellation{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      AllConstellation,
-				Namespace: Namespace,
-			},
-			Spec: kokav1alpha1.ConstellationSpec{
-				Filters:         make([]kokav1alpha1.Filter, 0),
-				TargetConfigMap: "test",
-				Name:            "Everything",
-			},
-		}
-
-		err = k8sClient.Create(ctx, constellation2)
-		Expect(err).To(Not(HaveOccurred()))
-	}
-
-	createSampleDataInterfaces := func() {
-		dataInterface := &kokav1alpha1.DataInterface{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-data-interface-empty",
-				Namespace: Namespace,
-				Labels: map[string]string{
-					"test":  "test",
-					"test2": "test2",
-				},
-			},
-			Spec: kokav1alpha1.DataInterfaceSpec{
-				Name: "my-interface",
-				Type: "kafka",
-			},
-		}
-
-		err := k8sClient.Create(ctx, dataInterface)
-		Expect(err).To(Not(HaveOccurred()))
-		name := "my-interface-2"
-
-		dataInterface2 := &kokav1alpha1.DataInterface{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-data-interface-complete",
-				Namespace: Namespace,
-				Labels: map[string]string{
-					"test": "test",
-				},
-			},
-			Spec: kokav1alpha1.DataInterfaceSpec{
-				Name:        "my-interface-2",
-				Reference:   &name,
-				Type:        "kafka",
-				Description: &name,
-			},
-		}
-
-		err = k8sClient.Create(ctx, dataInterface2)
-		Expect(err).To(Not(HaveOccurred()))
-		name3 := "my-interface-3"
-
-		dataInterface3 := &kokav1alpha1.DataInterface{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-data-interface-complete",
-				Namespace: SecondNamespace,
-				Labels: map[string]string{
-					"test": "test",
-				},
-			},
-			Spec: kokav1alpha1.DataInterfaceSpec{
-				Name:        "my-interface-3",
-				Reference:   &name3,
-				Type:        "kafka",
-				Description: &name3,
-			},
-		}
-
-		err = k8sClient.Create(ctx, dataInterface3)
-		Expect(err).To(Not(HaveOccurred()))
-	}
-
-	createSampleDataProcesses := func() {
-		d := "sample interface"
-		dataProcess1 := &kokav1alpha1.DataProcess{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-data-process",
-				Namespace: Namespace,
-				Labels: map[string]string{
-					"test": "test",
-				},
-			},
-			Spec: kokav1alpha1.DataProcessSpec{
-				Name:        "my-process",
-				Type:        "kafka-streams",
-				Description: "my-process",
-				Inputs: []kokav1alpha1.Edge{
-					{Reference: Namespace + "/my-interface", Info: "hello", Trigger: true, Description: &d},
-				},
-				Outputs: []kokav1alpha1.Edge{
-					{Reference: "my-interface-2", Info: "hello", Trigger: true, Description: &d},
-				},
-			},
-		}
-		err := k8sClient.Create(ctx, dataProcess1)
-		Expect(err).To(Not(HaveOccurred()))
-
-		dataProcess2 := &kokav1alpha1.DataProcess{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-data-process",
-				Namespace: SecondNamespace,
-				Labels: map[string]string{
-					"test": "test",
-				},
-			},
-			Spec: kokav1alpha1.DataProcessSpec{
-				Name:        "my-process",
-				Type:        "kafka-streams",
-				Description: "my-process",
-				Inputs: []kokav1alpha1.Edge{
-					{Reference: Namespace + "/my-interface", Info: "hello", Trigger: false, Description: &d},
-				},
-				Outputs: []kokav1alpha1.Edge{
-					{Reference: "my-interface-2", Info: "hello", Trigger: false, Description: &d},
-					{Reference: "my-interface-3", Info: "hello", Trigger: true, Description: &d},
-				},
-			},
-		}
-		err = k8sClient.Create(ctx, dataProcess2)
-		Expect(err).To(Not(HaveOccurred()))
-	}
-
-	createSampleDataSet := func() {
-		dataSet1 := &kokav1alpha1.DataSet{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-data-set",
-				Namespace: Namespace,
-				Labels: map[string]string{
-					"test":  "test",
-					"test3": "test3",
-				},
-			},
-			Spec: kokav1alpha1.DataSetSpec{
-				Interfaces: []kokav1alpha1.DataInterfaceSpec{
-					{
-						Name: "my-interface-32",
-						Type: "kafka",
-						Labels: map[string]string{
-							"test":  "test1",
-							"test2": "test2",
-						},
-					},
-				},
-				Processes: []kokav1alpha1.DataProcessSpec{
-					{
-						Name:        "my-process-32",
-						Type:        "kafka-streams",
-						Description: "my-process",
-						Inputs: []kokav1alpha1.Edge{
-							{Reference: Namespace + "/my-interface", Info: "hello", Trigger: true},
-						},
-						Outputs: []kokav1alpha1.Edge{
-							{Reference: "my-interface-2", Info: "hello", Trigger: true},
-						},
-					},
-				},
-			},
-			Status: kokav1alpha1.DataSetStatus{},
-		}
-
-		Expect(k8sClient.Create(ctx, dataSet1)).To(Not(HaveOccurred()))
-	}
-
-	namespace := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      Namespace,
-			Namespace: Namespace,
-		},
-	}
-
-	secondNamespace := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      SecondNamespace,
-			Namespace: SecondNamespace,
-		},
-	}
 	BeforeEach(func() {
 		By("Creating the Namespaces to perform the tests")
-		err := k8sClient.Create(ctx, namespace)
-		Expect(err).To(Not(HaveOccurred()))
-		err = k8sClient.Create(ctx, secondNamespace)
-		Expect(err).To(Not(HaveOccurred()))
+		createIgnoreExisting(buildNamespace(Namespace))
+		createIgnoreExisting(buildNamespace(SecondNamespace))
 	})
 
 	AfterEach(func() {
-		By("Deleting the Namespaces to perform the tests")
-		_ = k8sClient.Delete(ctx, namespace)
-		_ = k8sClient.Delete(ctx, secondNamespace)
+		By("Deleting all resources")
+		Eventually(func(g Gomega) error {
+			for _, ns := range []string{Namespace, SecondNamespace} {
+				constellations := &kokav1alpha1.ConstellationList{}
+				g.Expect(k8sClient.List(context.Background(), constellations, client.InNamespace(ns))).To(Succeed())
+				for _, l := range constellations.Items {
+					del(&l)
+				}
+				datasets := &kokav1alpha1.DataSetList{}
+				g.Expect(k8sClient.List(context.Background(), datasets, client.InNamespace(ns))).To(Succeed())
+				for _, l := range datasets.Items {
+					del(&l)
+				}
+				dataProcesses := &kokav1alpha1.DataProcessList{}
+				g.Expect(k8sClient.List(context.Background(), dataProcesses, client.InNamespace(ns))).To(Succeed())
+				for _, l := range dataProcesses.Items {
+					del(&l)
+				}
+				dataInterfaces := &kokav1alpha1.DataInterfaceList{}
+				g.Expect(k8sClient.List(context.Background(), dataInterfaces, client.InNamespace(ns))).To(Succeed())
+				for _, l := range dataInterfaces.Items {
+					del(&l)
+				}
+			}
+			for _, ns := range []string{Namespace, SecondNamespace} {
+				constellations := &kokav1alpha1.ConstellationList{}
+				g.Expect(k8sClient.List(context.Background(), constellations, client.InNamespace(ns))).To(Succeed())
+				g.Expect(len(constellations.Items)).To(Equal(0))
 
+				datasets := &kokav1alpha1.DataSetList{}
+				g.Expect(k8sClient.List(context.Background(), datasets, client.InNamespace(ns))).To(Succeed())
+				g.Expect(len(datasets.Items)).To(Equal(0))
+
+				dataProcesses := &kokav1alpha1.DataProcessList{}
+				g.Expect(k8sClient.List(context.Background(), dataProcesses, client.InNamespace(ns))).To(Succeed())
+				g.Expect(len(dataProcesses.Items)).To(Equal(0))
+
+				dataInterfaces := &kokav1alpha1.DataInterfaceList{}
+				g.Expect(k8sClient.List(context.Background(), dataInterfaces, client.InNamespace(ns))).To(Succeed())
+				g.Expect(len(dataInterfaces.Items)).To(Equal(0))
+			}
+			return nil
+		}, 40*time.Second, time.Second).Should(Succeed())
 	})
 
-	It("should successfully reconcile a custom resource for Constellation", func() {
-
-		By("Creating the custom resource for the Kind Constellation")
-		createSampleConstellations()
+	It("should be able to build a constellation", func(ctx SpecContext) {
+		By("create a constellation")
+		testConstellation := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{
+			Name:            randChars(5),
+			Filters:         []kokav1alpha1.Filter{},
+			Description:     sp("test"),
+			TargetConfigMap: "test",
+		})
+		create(testConstellation)
 
 		By("Checking if the custom resource was successfully created")
-		Eventually(func() error {
-			found := &kokav1alpha1.Constellation{}
-			return k8sClient.Get(ctx, namespacedFilteredNameTyped, found)
-		}, time.Minute, time.Second).Should(Succeed())
+		Eventually(func(g Gomega) {
+			f := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(testConstellation.Spec.Name))
+		}, 20*time.Second, time.Second).Should(Succeed())
+	})
 
-		By("Reconciling the custom resource created")
-		err := reconsileConstellation(namespacedFilteredNameTyped)
-		Expect(err).To(Not(HaveOccurred()))
-
-		By("Checking the latest Status of the custom resource")
-		Eventually(func() error {
-			constellation := &kokav1alpha1.Constellation{}
-			err := k8sClient.Get(ctx, namespacedFilteredNameTyped, constellation)
-			if err != nil {
-				return err
-			}
-			if constellation.Status.ConstellationResult != nil {
-				if len(constellation.Status.ConstellationResult.DataInterfaceList) != 0 {
-					return fmt.Errorf("data interfaces found")
-				}
-				if len(constellation.Status.ConstellationResult.DataProcessList) != 0 {
-					return fmt.Errorf("data processes found")
-				}
-				return nil
-			}
-			fmt.Printf("constellation.Status: %v\n", constellation.Status)
-			return fmt.Errorf("no constellation result found")
-		}, time.Second*10, time.Second).Should(Succeed())
-
-		By("Creating the data interfaces")
-		createSampleDataInterfaces()
-		createSampleDataProcesses()
-
-		By("Reconciling the custom resource created")
-		Expect(reconsileConstellation(namespacedFilteredNameTyped)).To(Not(HaveOccurred()))
-		Expect(reconsileConstellation(allNameTyped)).To(Not(HaveOccurred()))
-
-		By("Checking the latest Status of the custom resource")
-		Eventually(func() error {
-			constellation := &kokav1alpha1.Constellation{}
-			err := k8sClient.Get(ctx, namespacedFilteredNameTyped, constellation)
-			if err != nil {
-
-			}
-			if constellation.Status.ConstellationResult != nil {
-				Expect(len(constellation.Status.ConstellationResult.DataInterfaceList)).
-					To(Equal(2))
-				Expect(constellation.Status.ConstellationResult.DataInterfaceList[0].Type).
-					To(Equal("missing"))
-				Expect(len(constellation.Status.ConstellationResult.DataProcessList)).
-					To(Equal(1))
-				return nil
-			}
-			fmt.Printf("constellation.Status: %v\n", constellation.Status)
-			return fmt.Errorf("no constellation result found")
-		}, time.Second*10, time.Second).Should(Succeed())
-
-		By("Full reconsiliation of the custom resources created")
-		Expect(reconsileInterface(types.NamespacedName{Name: "test-data-interface-empty", Namespace: Namespace})).To(Not(HaveOccurred()))
-		Expect(reconsileInterface(types.NamespacedName{Name: "test-data-interface-complete", Namespace: Namespace})).To(Not(HaveOccurred()))
-		Expect(reconsileInterface(types.NamespacedName{Name: "test-data-interface-complete", Namespace: SecondNamespace})).To(Not(HaveOccurred()))
-		Expect(reconsileProcess(types.NamespacedName{Name: "test-data-process", Namespace: Namespace})).To(Not(HaveOccurred()))
-		Expect(reconsileProcess(types.NamespacedName{Name: "test-data-process", Namespace: SecondNamespace})).To(Not(HaveOccurred()))
-		Expect(reconsileConstellation(namespacedFilteredNameTyped)).To(Not(HaveOccurred()))
-		Expect(reconsileConstellation(allNameTyped)).To(Not(HaveOccurred()))
-
-		By("Checking the latest Status of the custom resource")
-		Eventually(func() error {
-			constellation := &kokav1alpha1.Constellation{}
-			err := k8sClient.Get(ctx, namespacedFilteredNameTyped, constellation)
-			if err != nil {
-
-			}
-			if constellation.Status.ConstellationResult != nil {
-				Expect(len(constellation.Status.ConstellationResult.DataInterfaceList)).
-					To(Equal(3))
-				Expect(constellation.Status.ConstellationResult.DataInterfaceList[0].Type).
-					To(Equal("kafka"))
-				Expect(len(constellation.Status.ConstellationResult.DataProcessList)).
-					To(Equal(1))
-				return nil
-			}
-			fmt.Printf("constellation.Status: %v\n", constellation.Status)
-			return fmt.Errorf("no constellation result found")
-		}, time.Second*10, time.Second).Should(Succeed())
-
-		By("Checking the latest Status of the custom resource for all namescaces")
-		Eventually(func() error {
-			constellation := &kokav1alpha1.Constellation{}
-			Expect(k8sClient.Get(ctx, allNameTyped, constellation)).To(Succeed())
-			if constellation.Status.ConstellationResult != nil {
-				Expect(len(constellation.Status.ConstellationResult.DataInterfaceList)).
-					To(Equal(4))
-				Expect(len(constellation.Status.ConstellationResult.DataProcessList)).
-					To(Equal(2))
-				return nil
-			}
-			fmt.Printf("constellation.Status: %v\n", constellation.Status)
-			return fmt.Errorf("no constellation result found")
-		}, time.Second*10, time.Second).Should(Succeed())
-
-		By("Expect the configmap to be filled")
-		Eventually(func() error {
-			configMap := &corev1.ConfigMap{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: "test"}, configMap)).To(Succeed())
-
-			Expect(configMap.Data["index.json"]).To(Not(BeEmpty()))
-			Expect(configMap.Data[AllConstellation+".json"]).To(Not(BeEmpty()))
-			Expect(configMap.Data[NamespaceFilteredConstellation+".json"]).To(Not(BeEmpty()))
-
-			return nil
-
-		}, time.Second*10, time.Second).Should(Succeed())
-
-		By("Loading the dataset & syncing")
-		createSampleDataSet()
-		Expect(reconsileSet(types.NamespacedName{Namespace: Namespace, Name: "test-data-set"})).To(Not(HaveOccurred()))
-
-		By("Checking the status of our dataset that we created two objects and they exist")
-		Eventually(func() error {
-			dataSet := &kokav1alpha1.DataSet{}
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: "test-data-set"}, dataSet)).To(Succeed())
-
-			Expect(len(dataSet.Status.Interfaces)).To(Equal(1))
-			Expect(len(dataSet.Status.Processes)).To(Equal(1))
-
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: dataSet.Status.Interfaces["my-interface-32"].Name}, &kokav1alpha1.DataInterface{})).To(Succeed())
-			Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: dataSet.Status.Processes["my-process-32"].Name}, &kokav1alpha1.DataProcess{})).To(Succeed())
-
-			return nil
-
+	It("should be able to build a constellation up in reverse order", func(ctx SpecContext) {
+		By("create a constellation")
+		testConstellation := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{
+			Name:            randChars(5),
+			Filters:         []kokav1alpha1.Filter{},
+			Description:     sp("test"),
+			TargetConfigMap: "test",
 		})
+		create(testConstellation)
+
+		By("Checking if the custom resource was successfully created")
+		Eventually(func(g Gomega) {
+			f := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(testConstellation.Spec.Name))
+			g.Expect(f.Status.ConstellationResult).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult.Name).To(Equal(testConstellation.Spec.Name))
+			g.Expect(f.Status.ConstellationResult.Description).To(Equal(*testConstellation.Spec.Description))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList).To(BeEmpty())
+			g.Expect(f.Status.ConstellationResult.DataProcessList).To(BeEmpty())
+
+			configMap := &corev1.ConfigMap{}
+			g.Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: "test"}, configMap)).To(Succeed())
+
+			g.Expect(configMap.Data["index.json"]).To(Not(BeEmpty()))
+			g.Expect(configMap.Data["test-constellation.json"]).To(Not(BeEmpty()))
+
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+		By("Checking if the configmap was created")
+		Eventually(func(g Gomega) {
+			configMap := &corev1.ConfigMap{}
+			g.Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: Namespace, Name: "test"}, configMap)).To(Succeed())
+
+			g.Expect(configMap.Data["index.json"]).To(Not(BeEmpty()))
+			g.Expect(configMap.Data["test-constellation.json"]).To(Not(BeEmpty()))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+		By("create a data process without existing data interfaces")
+		testDataProcess := buildDataProcess(Namespace, "test-data-process", nil, kokav1alpha1.DataProcessSpec{
+			Name:        randChars(5),
+			Type:        randChars(5),
+			Description: "test",
+			Inputs: []kokav1alpha1.Edge{
+				{
+					Reference:   "ref1",
+					Info:        randChars(10),
+					Trigger:     false,
+					Description: sp(randChars(10)),
+				},
+				{
+					Reference:   "ref2",
+					Info:        randChars(10),
+					Trigger:     true,
+					Description: sp(randChars(10)),
+				},
+			},
+			Outputs: []kokav1alpha1.Edge{
+				{
+					Reference:   "ref3",
+					Info:        randChars(10),
+					Trigger:     false,
+					Description: sp(randChars(10)),
+				},
+				{
+					Reference:   "ref4",
+					Info:        randChars(10),
+					Trigger:     true,
+					Description: sp(randChars(10)),
+				},
+			},
+		})
+		create(testDataProcess)
+
+		By("Checking if the custom resource was successfully created")
+		Eventually(func(g Gomega) {
+			f := buildDataProcess(Namespace, "test-data-process", nil, kokav1alpha1.DataProcessSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(testDataProcess.Spec.Name))
+			g.Expect(f.Spec.Type).To(Equal(testDataProcess.Spec.Type))
+			g.Expect(f.Spec.Description).To(Equal(testDataProcess.Spec.Description))
+			g.Expect(f.Spec.Inputs).To(Equal(testDataProcess.Spec.Inputs))
+			g.Expect(f.Spec.Outputs).To(Equal(testDataProcess.Spec.Outputs))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+		By("Verify that the constellation has been updated")
+		Eventually(func(g Gomega) {
+			f := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{})
+			get(g, f)
+			g.Expect(f.Status).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList).To(HaveLen(4))
+			g.Expect(f.Status.ConstellationResult.DataProcessList).To(HaveLen(1))
+
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Inputs[0].Reference).To(Equal("ref1"))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Inputs[1].Reference).To(Equal("ref2"))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Outputs[0].Reference).To(Equal("ref3"))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Outputs[1].Reference).To(Equal("ref4"))
+
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList[0].Type).To(Equal("missing"))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList[1].Type).To(Equal("missing"))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList[2].Type).To(Equal("missing"))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList[3].Type).To(Equal("missing"))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+		By("create a data interface")
+		testDataInterface := buildDataInterface(Namespace, "test-data-interface", nil, kokav1alpha1.DataInterfaceSpec{
+			Name:        randChars(5),
+			Type:        randChars(5),
+			Description: sp("test"),
+		})
+		create(testDataInterface)
+
+		By("Checking if the custom resource was successfully created")
+		Eventually(func(g Gomega) {
+			f := buildDataInterface(Namespace, "test-data-interface", nil, kokav1alpha1.DataInterfaceSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(testDataInterface.Spec.Name))
+			g.Expect(f.Spec.Type).To(Equal(testDataInterface.Spec.Type))
+			g.Expect(f.Spec.Description).To(Equal(testDataInterface.Spec.Description))
+			g.Expect(f.Status).To(Not(BeNil()))
+			g.Expect(f.Status.UsedInDataProcesses).To(BeEmpty())
+			g.Expect(f.Status.UsedReference).To(Equal(Namespace + "/test-data-interface"))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+		By("create the other data interfaces")
+		dataInterfaceRef1 := buildDataInterface(Namespace, "test-data-interface-ref1", nil, kokav1alpha1.DataInterfaceSpec{
+			Name:        "Data Interface Ref 1",
+			Reference:   sp("ref1"),
+			Type:        randChars(6),
+			Description: sp(randChars(30)),
+		})
+		create(dataInterfaceRef1)
+		dataInterfaceRef2 := buildDataInterface(Namespace, "test-data-interface-ref2", nil, kokav1alpha1.DataInterfaceSpec{
+			Name:        "Data Interface Ref 2",
+			Reference:   sp("ref2"),
+			Type:        randChars(6),
+			Description: sp(randChars(30)),
+		})
+		create(dataInterfaceRef2)
+		dataInterfaceRef3 := buildDataInterface(Namespace, "test-data-interface-ref3", nil, kokav1alpha1.DataInterfaceSpec{
+			Name:        "Data Interface Ref 3",
+			Reference:   sp("ref3"),
+			Type:        randChars(6),
+			Description: sp(randChars(30)),
+		})
+		create(dataInterfaceRef3)
+		dataInterfaceRef4 := buildDataInterface(Namespace, "test-data-interface-ref4", nil, kokav1alpha1.DataInterfaceSpec{
+			Name:        "Data Interface Ref 4",
+			Reference:   sp("ref4"),
+			Type:        randChars(6),
+			Description: sp(randChars(30)),
+		})
+		create(dataInterfaceRef4)
+
+		By("Checking if the custom resource was successfully created")
+		Eventually(func(g Gomega) {
+			f := buildDataInterface(Namespace, "test-data-interface-ref1", nil, kokav1alpha1.DataInterfaceSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(dataInterfaceRef1.Spec.Name))
+			g.Expect(f.Spec.Type).To(Equal(dataInterfaceRef1.Spec.Type))
+			g.Expect(f.Spec.Description).To(Equal(dataInterfaceRef1.Spec.Description))
+			g.Expect(f.Status).To(Not(BeNil()))
+			g.Expect(f.Status.UsedInDataProcesses).To(HaveLen(1))
+			g.Expect(f.Status.UsedInDataProcesses[0].Namespace).To(Equal(Namespace))
+			g.Expect(f.Status.UsedInDataProcesses[0].Name).To(Equal("test-data-process"))
+			g.Expect(f.Status.UsedReference).To(Equal("ref1"))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+		By("Checking if the constellation was updated")
+		Eventually(func(g Gomega) {
+			f := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{})
+			get(g, f)
+			g.Expect(f.Status).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList).To(HaveLen(5))
+			g.Expect(f.Status.ConstellationResult.DataProcessList).To(HaveLen(1))
+
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Type).To(Equal(testDataProcess.Spec.Type))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Inputs).To(HaveLen(2))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Outputs).To(HaveLen(2))
+
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Inputs[0].Reference).To(Equal("ref1"))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Inputs[1].Reference).To(Equal("ref2"))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Outputs[0].Reference).To(Equal("ref3"))
+			g.Expect(f.Status.ConstellationResult.DataProcessList[0].Outputs[1].Reference).To(Equal("ref4"))
+
+			types := []string{}
+			for _, i := range f.Status.ConstellationResult.DataInterfaceList {
+				types = append(types, i.Type)
+			}
+
+			g.Expect(types).To(ContainElements(
+				testDataInterface.Spec.Type,
+				dataInterfaceRef1.Spec.Type,
+				dataInterfaceRef2.Spec.Type,
+				dataInterfaceRef3.Spec.Type,
+				dataInterfaceRef4.Spec.Type))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+	})
+
+	It("test filtering in secondary namespace", func(ctx SpecContext) {
+		By("create a constellation")
+		testConstellation1 := buildConstellation(Namespace, "test-constellation-1", nil, kokav1alpha1.ConstellationSpec{
+			Name:            randChars(5),
+			Filters:         []kokav1alpha1.Filter{},
+			Description:     sp("test"),
+			TargetConfigMap: "test",
+		})
+		create(testConstellation1)
+		testConstellation2 := buildConstellation(Namespace, "test-constellation-2", nil, kokav1alpha1.ConstellationSpec{
+			Name: randChars(5),
+			Filters: []kokav1alpha1.Filter{{
+				Namespaces: []string{SecondNamespace},
+				Labels:     map[string]string{"test": "selected"},
+			}},
+			Description:     sp("test"),
+			TargetConfigMap: "test",
+		})
+		create(testConstellation2)
+
+		By("create via dataset in secondary namespace")
+		dataset2 := buildDataSet(SecondNamespace, "test-dataset", map[string]string{"test": "none"}, kokav1alpha1.DataSetSpec{
+			Interfaces: []kokav1alpha1.DataInterfaceSpec{
+				{
+					Name:        "selected.2",
+					Reference:   sp("selected.2"),
+					Type:        randChars(5),
+					Description: sp("test"),
+					Labels:      map[string]string{"test": "selected"},
+				},
+				{
+					Name:        "unselected.2",
+					Reference:   sp("unselected.2"),
+					Type:        randChars(5),
+					Description: sp("test"),
+					Labels:      map[string]string{"test": "unselected"},
+				},
+			},
+			Processes: []kokav1alpha1.DataProcessSpec{
+				{
+					Name:        "selected.2",
+					Type:        randChars(5),
+					Description: "test",
+					Inputs: []kokav1alpha1.Edge{
+						{
+							Reference:   "selected.2",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+						{
+							Reference:   "unselected.2",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+					},
+					Outputs: []kokav1alpha1.Edge{
+						{
+							Reference:   "unselected.1",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+					},
+					Labels: map[string]string{"test": "selected"},
+				},
+				{
+					Name:        "unselected.2",
+					Type:        randChars(5),
+					Description: "test",
+					Inputs: []kokav1alpha1.Edge{
+						{
+							Reference:   "selected.2",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+						{
+							Reference:   "unselected.2",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+					},
+					Outputs: []kokav1alpha1.Edge{
+						{
+							Reference:   "unselected.1",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+					},
+					Labels: map[string]string{"test": "unselected"},
+				},
+			},
+		})
+		create(dataset2)
+
+		By("create via dataset in primary namespace")
+		dataset1 := buildDataSet(Namespace, "test-dataset", map[string]string{"test": "none"}, kokav1alpha1.DataSetSpec{
+			Interfaces: []kokav1alpha1.DataInterfaceSpec{
+				{
+					Name:        "selected.1",
+					Reference:   sp("selected.1"),
+					Type:        randChars(5),
+					Description: sp("test"),
+					Labels:      map[string]string{"test": "selected"},
+				},
+				{
+					Name:        "unselected.1",
+					Reference:   sp("unselected.1"),
+					Type:        randChars(5),
+					Description: sp("test"),
+					Labels:      map[string]string{"test": "unselected"},
+				},
+			},
+			Processes: []kokav1alpha1.DataProcessSpec{
+				{
+					Name:        "selected.1",
+					Type:        randChars(5),
+					Description: "test",
+					Inputs: []kokav1alpha1.Edge{
+						{
+							Reference:   "selected.1",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+						{
+							Reference:   "unselected.1",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+					},
+					Outputs: []kokav1alpha1.Edge{
+						{
+							Reference:   "unselected.2",
+							Info:        "",
+							Trigger:     false,
+							Description: nil,
+						},
+					},
+					Labels: map[string]string{"test": "selected"},
+				},
+			},
+		})
+		create(dataset1)
+
+		By("Checking if the generic constellation took data from the dataset")
+		Eventually(func(g Gomega) {
+			f := buildConstellation(Namespace, "test-constellation-1", nil, kokav1alpha1.ConstellationSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(testConstellation1.Spec.Name))
+			g.Expect(f.Status).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList).To(HaveLen(4))
+			g.Expect(f.Status.ConstellationResult.DataProcessList).To(HaveLen(3))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
+		By("Checking if the filtered constellation took data from the dataset")
+		Eventually(func(g Gomega) {
+			f := buildConstellation(Namespace, "test-constellation-2", nil, kokav1alpha1.ConstellationSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(testConstellation2.Spec.Name))
+			g.Expect(f.Status).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList).To(HaveLen(3))
+			g.Expect(f.Status.ConstellationResult.DataProcessList).To(HaveLen(1))
+		}, 20*time.Second, time.Second).Should(Succeed())
+
 	})
 })
+
+func get(g Gomega, obj client.Object) {
+	err := k8sClient.Get(context.Background(), client.ObjectKeyFromObject(obj), obj)
+	g.Expect(err).To(Not(HaveOccurred()))
+}
+
+func del(obj client.Object) {
+	err := k8sClient.Delete(context.Background(), obj, client.GracePeriodSeconds(0))
+	Expect(err).To(Not(HaveOccurred()))
+}
+
+func sp(in string) *string {
+	return &in
+}
+
+func createIgnoreExisting(obj client.Object) {
+	err := k8sClient.Create(context.Background(), obj)
+	Expect(client.IgnoreAlreadyExists(err)).To(Succeed())
+}
+
+func create(obj client.Object) {
+	err := k8sClient.Create(context.Background(), obj)
+	Expect(err).To(Not(HaveOccurred()))
+}
+
+func buildNamespace(name string) *corev1.Namespace {
+	namespace := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: name,
+		},
+	}
+	return namespace
+}
+
+func buildDataInterface(namespace string, name string, labels map[string]string, spec kokav1alpha1.DataInterfaceSpec) *kokav1alpha1.DataInterface {
+	dataInterface := &kokav1alpha1.DataInterface{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: spec,
+	}
+	return dataInterface
+}
+
+func buildDataProcess(namespace string, name string, labels map[string]string, spec kokav1alpha1.DataProcessSpec) *kokav1alpha1.DataProcess {
+	dataProcess := &kokav1alpha1.DataProcess{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: spec,
+	}
+	return dataProcess
+}
+
+func buildDataSet(namespace string, name string, labels map[string]string, spec kokav1alpha1.DataSetSpec) *kokav1alpha1.DataSet {
+	dataSet := &kokav1alpha1.DataSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: spec,
+	}
+	return dataSet
+}
+
+func buildConstellation(namespace string, name string, labels map[string]string, spec kokav1alpha1.ConstellationSpec) *kokav1alpha1.Constellation {
+	constellation := &kokav1alpha1.Constellation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: spec,
+	}
+	return constellation
+}
