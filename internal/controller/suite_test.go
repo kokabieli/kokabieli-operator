@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -50,7 +51,9 @@ func TestControllers(t *testing.T) {
 	RunSpecs(t, "Controller Suite")
 }
 
-var _ = BeforeSuite(func() {
+var cancelManagerCtx context.CancelFunc
+
+var _ = BeforeSuite(func(ctx context.Context) {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
@@ -110,18 +113,21 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	mgrCtx := ctx
+	mgrCtx, cancelManagerCtx = context.WithCancel(ctrl.SetupSignalHandler())
+
 	go func() {
-		err = mgr.Start(ctrl.SetupSignalHandler())
+		err = mgr.Start(mgrCtx)
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
 	k8sClient = mgr.GetClient()
 	Expect(k8sClient).ToNot(BeNil())
-
 })
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	cancelManagerCtx()
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
