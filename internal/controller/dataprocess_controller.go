@@ -80,13 +80,13 @@ func (r *DataProcessReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	var notFound []string
 
 	for _, input := range dataProcess.Spec.Inputs {
-		if _, available := availableReferences[input.Reference]; !available {
-			notFound = append(notFound, input.Reference)
+		if _, available := availableReferences[input.BuildTargetReference(dataProcess.Namespace)]; !available {
+			notFound = append(notFound, input.BuildTargetReference(dataProcess.Namespace))
 		}
 	}
 	for _, output := range dataProcess.Spec.Outputs {
-		if _, available := availableReferences[output.Reference]; !available {
-			notFound = append(notFound, output.Reference)
+		if _, available := availableReferences[output.BuildTargetReference(dataProcess.Namespace)]; !available {
+			notFound = append(notFound, output.BuildTargetReference(dataProcess.Namespace))
 		}
 	}
 

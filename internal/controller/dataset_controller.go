@@ -166,6 +166,7 @@ func (r *DataSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		intf.Spec.Type = iSpec.Type
 		intf.Spec.Reference = iSpec.Reference
 		intf.Spec.Description = iSpec.Description
+		intf.Spec.Namespaced = iSpec.Namespaced || set.Spec.Namespaced
 		intf.Labels = mergeLabels(iSpec.Labels, set.Labels)
 		if err := r.Update(ctx, intf); err != nil {
 			clog.Error(err, "Failed to update DataInterface")

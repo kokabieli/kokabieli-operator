@@ -27,6 +27,10 @@ import (
 type Edge struct {
 	// References the data interface
 	Reference string `json:"reference,omitempty"`
+	// Namespaced is true if the data interface is namespaced (false by default)
+	// if true, the data interface adds the namespace to the reference to make it cluster-wide unique
+	// +optional
+	Namespaced bool `json:"namespaced,omitempty"`
 	// Info is a human-readable description of the data interface
 	Info string `json:"info,omitempty"`
 	// Trigger is true if the data interface triggers further processing
@@ -36,6 +40,13 @@ type Edge struct {
 	// Description is a human-readable description of the data interface
 	// +optional
 	Description *string `json:"description,omitempty"`
+}
+
+func (e *Edge) BuildTargetReference(namespace string) string {
+	if e.Namespaced {
+		return namespace + "/" + e.Reference
+	}
+	return e.Reference
 }
 
 // DataProcessSpec defines the desired state of DataProcess
@@ -54,7 +65,7 @@ type DataProcessSpec struct {
 	Inputs []Edge `json:"inputs,omitempty"`
 	// Outputs is a list of data interfaces that are used as output for the data process
 	Outputs []Edge `json:"outputs,omitempty"`
-	// Labels is a list of labels that are added to the data process (mainly used for datasets)
+	// Labels is a list of labels that are added to the data process (only used for datasets)
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 }

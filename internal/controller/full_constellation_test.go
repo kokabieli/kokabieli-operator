@@ -462,7 +462,91 @@ var _ = Describe("Constellation controller", func() {
 			g.Expect(f.Status.ConstellationResult.DataInterfaceList).To(HaveLen(3))
 			g.Expect(f.Status.ConstellationResult.DataProcessList).To(HaveLen(1))
 		}, 20*time.Second, time.Second).Should(Succeed())
+	})
 
+	It("should be able to create namespaced values", func(ctx SpecContext) {
+		By("create a dataset in namaespaced mode")
+		dataset1 := buildDataSet(Namespace, "test-dataset", map[string]string{"test": "none"}, kokav1alpha1.DataSetSpec{
+			Namespaced: true,
+			Interfaces: []kokav1alpha1.DataInterfaceSpec{
+				{
+					Name:      "ref.1",
+					Reference: sp("ref.1"),
+					Type:      randChars(5),
+				},
+				{
+					Name:      "ref.2",
+					Reference: sp("ref.2"),
+					Type:      randChars(5),
+				},
+				{
+					Name:      "ref.5",
+					Reference: sp("ref.5"),
+					Type:      randChars(5),
+				},
+			},
+			Processes: []kokav1alpha1.DataProcessSpec{
+				{
+					Name:    "p.1",
+					Inputs:  []kokav1alpha1.Edge{{Reference: "ref.1"}, {Reference: "ref.5"}},
+					Outputs: []kokav1alpha1.Edge{{Reference: "ref.2"}},
+				},
+			},
+		})
+		create(dataset1)
+
+		dataset2 := buildDataSet(Namespace, "test-dataset-2", map[string]string{"test": "none"}, kokav1alpha1.DataSetSpec{
+			Namespaced: true,
+			Interfaces: []kokav1alpha1.DataInterfaceSpec{
+				{
+					Name:      "ref.2",
+					Reference: sp("ref.2"),
+				},
+			},
+			Processes: []kokav1alpha1.DataProcessSpec{
+				{
+					Name:    "p.2",
+					Inputs:  []kokav1alpha1.Edge{{Reference: "ref.2"}},
+					Outputs: []kokav1alpha1.Edge{{Reference: "ref.3"}},
+				},
+			},
+		})
+		create(dataset2)
+		dataset3 := buildDataSet(Namespace, "test-dataset-3", map[string]string{"test": "none"}, kokav1alpha1.DataSetSpec{
+			Namespaced: false,
+			Interfaces: []kokav1alpha1.DataInterfaceSpec{
+				{
+					Name:      "ref.2",
+					Reference: sp("ref.2"),
+				},
+			},
+			Processes: []kokav1alpha1.DataProcessSpec{
+				{
+					Name:    "p.2",
+					Inputs:  []kokav1alpha1.Edge{{Reference: "ref.2"}},
+					Outputs: []kokav1alpha1.Edge{{Reference: "ref.3"}},
+				},
+			},
+		})
+		create(dataset3)
+
+		By("create a basic constellation")
+		testConstellation := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{
+			Name: randChars(5),
+		})
+		create(testConstellation)
+
+		By("Checking if the custom resource was successfully in namespaced mode")
+		Eventually(func(g Gomega) {
+
+			f := buildConstellation(Namespace, "test-constellation", nil, kokav1alpha1.ConstellationSpec{})
+			get(g, f)
+			g.Expect(f.Spec.Name).To(Equal(testConstellation.Spec.Name))
+			g.Expect(f.Status).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult).To(Not(BeNil()))
+			g.Expect(f.Status.ConstellationResult.DataInterfaceList).To(HaveLen(7))
+			g.Expect(f.Status.ConstellationResult.DataProcessList).To(HaveLen(3))
+		}, 20*time.Second, time.Second).Should(Succeed())
 	})
 })
 

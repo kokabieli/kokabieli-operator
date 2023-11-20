@@ -53,6 +53,11 @@ spec:
                       description: Info is a human-readable description of the data
                         interface
                       type: string
+                    namespaced:
+                      description: Namespaced is true if the data interface is namespaced
+                        (false by default) if true, the data interface adds the namespace
+                        to the reference to make it cluster-wide unique
+                      type: boolean
                     reference:
                       description: References the data interface
                       type: string
@@ -68,7 +73,7 @@ spec:
                 additionalProperties:
                   type: string
                 description: Labels is a list of labels that are added to the data
-                  process (mainly used for datasets)
+                  process (only used for datasets)
                 type: object
               name:
                 description: Name is the displayed name of the data process
@@ -88,6 +93,11 @@ spec:
                       description: Info is a human-readable description of the data
                         interface
                       type: string
+                    namespaced:
+                      description: Namespaced is true if the data interface is namespaced
+                        (false by default) if true, the data interface adds the namespace
+                        to the reference to make it cluster-wide unique
+                      type: boolean
                     reference:
                       description: References the data interface
                       type: string
