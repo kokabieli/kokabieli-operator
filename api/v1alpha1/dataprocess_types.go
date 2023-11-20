@@ -30,7 +30,7 @@ type Edge struct {
 	// Namespaced is true if the data interface is namespaced (false by default)
 	// if true, the data interface adds the namespace to the reference to make it cluster-wide unique
 	// +optional
-	Namespaced *bool `json:"namespaced,omitempty"`
+	Namespaced bool `json:"namespaced,omitempty"`
 	// Info is a human-readable description of the data interface
 	Info string `json:"info,omitempty"`
 	// Trigger is true if the data interface triggers further processing
@@ -43,7 +43,7 @@ type Edge struct {
 }
 
 func (e *Edge) BuildTargetReference(namespace string) string {
-	if e.Namespaced != nil && *e.Namespaced {
+	if e.Namespaced {
 		return namespace + "/" + e.Reference
 	}
 	return e.Reference

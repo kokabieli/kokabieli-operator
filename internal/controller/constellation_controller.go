@@ -121,6 +121,11 @@ func (r *ConstellationReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
+	if constellation.Spec.TargetConfigMap == "" {
+		log.Info("No target ConfigMap specified, skipping")
+		return ctrl.Result{}, nil
+	}
+
 	configMap := &corev1.ConfigMap{}
 	var index []kokabieliv1alpha1.ConstellationInfo
 	err = r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: constellation.Spec.TargetConfigMap}, configMap)

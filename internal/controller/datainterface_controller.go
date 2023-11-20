@@ -222,7 +222,7 @@ func equalNamespacedNames(processes []kokabieliv1alpha1.NamespacedName, processe
 
 func dataInterfaceReference(dataInterface *kokabieliv1alpha1.DataInterface) string {
 	if dataInterface.Spec.Reference != nil {
-		if dataInterface.Spec.Namespaced != nil && *dataInterface.Spec.Namespaced {
+		if dataInterface.Spec.Namespaced {
 			return dataInterface.Namespace + "/" + *dataInterface.Spec.Reference
 		}
 		return *dataInterface.Spec.Reference

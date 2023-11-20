@@ -38,7 +38,7 @@ type DataInterfaceSpec struct {
 	// Namespaced is true if the data interface is namespaced (false by default)
 	// if true, the data interface adds the namespace to the reference to make it cluster-wide unique
 	// +optional
-	Namespaced *bool `json:"namespaced,omitempty"`
+	Namespaced bool `json:"namespaced,omitempty"`
 
 	// Type is the type of the data interface (e.g. "topic", "queue", "database", "file")
 	Type string `json:"type,omitempty"`
