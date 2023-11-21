@@ -49,9 +49,9 @@ type DataSetReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=kokabie.li.kokabie.li,resources=datasets,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=kokabie.li.kokabie.li,resources=datasets/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=kokabie.li.kokabie.li,resources=datasets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=kokabie.li,resources=datasets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=kokabie.li,resources=datasets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=kokabie.li,resources=datasets/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
