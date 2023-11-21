@@ -5,7 +5,7 @@ resources:
 - bases/kokabie.li_constellations.yaml
 - bases/kokabie.li_datainterfaces.yaml
 - bases/kokabie.li_dataprocesses.yaml
-- bases/kokabie.li.kokabie.li_datasets.yaml
+- bases/kokabie.li_datasets.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:
