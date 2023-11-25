@@ -1,5 +1,8 @@
 # kokabieli-operator
-// TODO(user): Add simple overview of use/purpose
+
+kokabieli allows you to display data flows of your cluster based on declaration by the different deployments.
+
+You can find the documentation [here](https://kokabie.li/).
 
 ## Description
 // TODO(user): An in-depth paragraph about your project and overview of use
