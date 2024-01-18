@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/go-logr/logr v1.4.1
 	github.com/gzuidhof/tygo v0.2.13
-	github.com/onsi/ginkgo/v2 v2.14.0
+	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.30.0
 	k8s.io/api v0.28.4
 	k8s.io/apimachinery v0.28.4
