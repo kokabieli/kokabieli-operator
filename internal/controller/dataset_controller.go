@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"math/rand"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/examples/configfile/custom/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -118,7 +117,7 @@ func (r *DataSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 			iref = corev1.ObjectReference{
 				Kind:       "DataInterface",
-				APIVersion: v1alpha1.GroupVersion.String(),
+				APIVersion: kokabieliv1alpha1.GroupVersion.String(),
 				Name:       req.Name + "-" + randChars(5),
 				Namespace:  req.Namespace,
 			}
@@ -183,7 +182,7 @@ func (r *DataSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 			pref = corev1.ObjectReference{
 				Kind:       "DataProcess",
-				APIVersion: v1alpha1.GroupVersion.String(),
+				APIVersion: kokabieliv1alpha1.GroupVersion.String(),
 				Name:       req.Name + "-" + randChars(5),
 				Namespace:  req.Namespace,
 			}
