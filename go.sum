@@ -49,8 +49,8 @@ github.com/google/pprof v0.0.0-20240424215950-a892ee059fd6 h1:k7nVchz72niMH6YLQN
 github.com/google/pprof v0.0.0-20240424215950-a892ee059fd6/go.mod h1:kf6iHlnVGwgKolg33glAes7Yg/8iWP8ukqeldJSO7jw=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gzuidhof/tygo v0.2.14 h1:QRBD6eby2SMyYzv8KzXA+yopPbEO6w2Qzuuqqp9z+vU=
-github.com/gzuidhof/tygo v0.2.14/go.mod h1:s3lpnppkDixQQhMWD78yPtAmugMHENsPWpQYziUIpw0=
+github.com/gzuidhof/tygo v0.2.15 h1:6dFA7AHPb1TyZNjwHc9Bf7WCxg+3UPo1dP6DEbTa/Z8=
+github.com/gzuidhof/tygo v0.2.15/go.mod h1:s3lpnppkDixQQhMWD78yPtAmugMHENsPWpQYziUIpw0=
 github.com/imdario/mergo v0.3.6 h1:xTNEAn+kxVO7dTZGu0CegyqKZmoWFI0rF8UxjlB2d28=
 github.com/imdario/mergo v0.3.6/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=

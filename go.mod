@@ -6,7 +6,7 @@ toolchain go1.22.3
 
 require (
 	github.com/go-logr/logr v1.4.2
-	github.com/gzuidhof/tygo v0.2.14
+	github.com/gzuidhof/tygo v0.2.15
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 	k8s.io/api v0.30.1
